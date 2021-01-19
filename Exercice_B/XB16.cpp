@@ -5,10 +5,10 @@ int seek(unsigned data, unsigned seq, unsigned n){
   if(seq>data){
     return false;
   }
-  seq = seq & 1<<n;
-  int puissance = (int)sqrt(data);
+  seq = seq & ~(~0<<n);
+  int puissance = ceil(sqrt(data));
   do{
-    int bits = data>>(n-puissance) & 1<<n;
+    int bits = data>>(n-puissance) & ~(~0<<n);
     printf("%d",bits);
     printf("%s"," -- ");
     printf("%d\n",seq);
@@ -21,6 +21,6 @@ int seek(unsigned data, unsigned seq, unsigned n){
 }
 
 int main(){
-  printf("%d\n",seek(31,4,2));
+  printf("%d\n",seek(13,5,3));
   return 0;
 }
