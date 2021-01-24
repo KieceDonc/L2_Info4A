@@ -3,8 +3,8 @@
 
 int* fillRand(int* tab, int n, int k){
   for(int x=0;x<n;x++){
-    srand(x);
-    int random = ((double) rand())/RAND_MAX*k; //*k;
+    srand(x+x%2+7);
+    int random = ((double) rand())/RAND_MAX*k; // entre 0 et k-1 inclus
     tab[x]=random;
   }
   return tab;
