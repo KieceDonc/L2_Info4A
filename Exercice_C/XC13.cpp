@@ -16,7 +16,7 @@ int seekDup0(int* tab,int n){
 
 
 int seekDup1(int* tab,int n){
-  int save[K] = {0};
+  int save[K] = {};
   for(int x=0;x<n;x++){
     if(tab[x]<=K){
       save[tab[x]]+=1;

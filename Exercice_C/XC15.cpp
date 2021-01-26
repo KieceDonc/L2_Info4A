@@ -1,5 +1,6 @@
 #include <stdio.h>
 #define K 1000
+
 /*
 Le but de cet exercice est de développer des fonctions permettant de gérer des ensembles d'entiers. On supposera, pour des raisons pratiques
 d'efficacité de la représentation utilisée, que les valeurs des éléments de ces ensembles sont comprisent entre O et une constante K qui sera
