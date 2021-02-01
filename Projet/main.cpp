@@ -259,16 +259,17 @@ int connexe(){
   * {int} 
 */
 int genRandomAlreadyConnexe[MAX_COLUMN*MAX_ROW] = {};
+int tosrand = 0;
 int genGetRandomPosition(){
   int shouldContinue = 1;
   int random = 0;
-  int tosrand = time(NULL);
   do{
     tosrand+=1;
     srand(tosrand);
     random = ((double) rand())/RAND_MAX*(MAX_COLUMN*MAX_ROW-2)+1;
     if(labyrinth[random]==AFF_VIDE && random!=0 && genRandomAlreadyConnexe[random]==0){
       shouldContinue=0;
+      printf("%d\n",random);
     }
   }while(shouldContinue);
   return random;
@@ -294,9 +295,12 @@ void gen_lab(int k){
     do{
       int randomPositionID = genGetRandomPosition();
       labyrinth[randomPositionID]=AFF_MUR;
-      if(connexe()){
+      int connexeResult = connexe();
+      if(connexeResult){
         wallToBuildRemaining--;
-        genRandomAlreadyConnexe[MAX_COLUMN*MAX_ROW] = {};
+        for(int x=0;x<(MAX_COLUMN*MAX_ROW);x++){
+          genRandomAlreadyConnexe[x]=0;
+        }
       }else{
         labyrinth[randomPositionID]=AFF_VIDE;
         genRandomAlreadyConnexe[randomPositionID]=1;
@@ -313,7 +317,7 @@ void gen_lab(int k){
 // --------------------------------------------------------------------
 
 int main(){
-  gen_lab(33);
+  gen_lab(22);
   affiche();
   return 0;
 }
