@@ -296,6 +296,10 @@ int connexe()
       }
     }
   }
+  if(DEBUG){
+    showPile();
+    affiche();
+  }
   if(realWhiteSquareCount == 0)
   {
     printf("%s\n","Erreur : aucune case blanche");
