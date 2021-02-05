@@ -9,11 +9,11 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NB_COLONNES 8 //Longueur de la grille(nombre de colonnes)
-#define NB_LIGNES 8   //Largeur de la grille(nombre de lignes)
+#define NB_COLONNES 4 //Longueur de la grille(nombre de colonnes)
+#define NB_LIGNES 4   //Largeur de la grille(nombre de lignes)
 #define AFF_VIDE '-'  //Caractère représentant les cases vides pour l’affichage
 #define AFF_MUR  'X'  //Caractère représentant les murs pour l’affichage
-#define AFF_BORD 'M'  //Caractère représentant les bords pour l’affichage
+#define AFF_BORD ' '  //Caractère représentant les bords pour l’affichage
 #define POP_VALUE 0   // Valeur utiliser pour dépiler un entier
 #define PUSH_VALUE 2  // Valeur utiliser pour empiler un entier
 #define DEBUG 1       // utiliser pour le debug
@@ -130,7 +130,7 @@ void push(int id)
 int pop(int id)
 {
   int valeur = Pile[id];
-  Pile[id] = POP_VALUE;
+  Pile[id]= POP_VALUE;
   return valeur;  
 }
 
@@ -141,13 +141,14 @@ int pop(int id)
 */
 int getCaseSuperieurID(int id)
 {
-  int up_ID = id+NB_LIGNES;
+  int up_ID = id-NB_LIGNES;
   int oldColumn = getCol(id);
   int newColumn = getCol(up_ID);
-  if(up_ID>(NB_LIGNES*NB_COLONNES-1) || oldColumn != newColumn)
+  if(up_ID<0 || oldColumn != newColumn)
   {
     return -1;
-  }else{
+  }else
+  {
     return up_ID;
   }
 }
@@ -159,13 +160,14 @@ int getCaseSuperieurID(int id)
 */
 int getCaseInferieurID(int id)
 {
-  int down_ID = id-NB_LIGNES;
+  int down_ID = id+NB_LIGNES;
   int oldColumn = getCol(id);
   int newColumn = getCol(down_ID);
-  if(down_ID<0 || oldColumn != newColumn)
+  if(down_ID>(NB_LIGNES*NB_COLONNES-1) || oldColumn != newColumn)
   {
     return -1;
-  }else{
+  }else
+  {
     return down_ID;
   }
 }
@@ -225,7 +227,7 @@ int nombreCasesBlanchesDetecter(int id)
     int square_up_value = pop(square_up_id);
     if(square_up_value==PUSH_VALUE)
     {
-      whiteCount++;
+      whiteCount+=1;
       whiteCount+=nombreCasesBlanchesDetecter(square_up_id);
     }
   }
@@ -235,7 +237,7 @@ int nombreCasesBlanchesDetecter(int id)
     int square_down_value = pop(square_down_id);
     if(square_down_value==PUSH_VALUE)
     {
-      whiteCount++;
+      whiteCount+=1;
       whiteCount+=nombreCasesBlanchesDetecter(square_down_id);
     }
   }
@@ -244,8 +246,8 @@ int nombreCasesBlanchesDetecter(int id)
   {
     int square_left_value = pop(square_left_id);
     if(square_left_value==PUSH_VALUE)
-    {
-      whiteCount++;
+    {  
+      whiteCount+=1;
       whiteCount+=nombreCasesBlanchesDetecter(square_left_id);
     }
   }
@@ -255,7 +257,7 @@ int nombreCasesBlanchesDetecter(int id)
     int square_right_value = pop(square_right_id);
     if(square_right_value==PUSH_VALUE)
     {
-      whiteCount++;
+      whiteCount+=1;
       whiteCount+=nombreCasesBlanchesDetecter(square_right_id);
     }
   }
@@ -263,9 +265,18 @@ int nombreCasesBlanchesDetecter(int id)
   return whiteCount;
 }
 
+void showPile(){
+  for(int x=0;x<NB_LIGNES;x++){
+    for(int y=0;y<NB_COLONNES;y++){
+      printf("%d ",Pile[getID(x,y)]);
+    }
+    printf("\n");
+  }
+}
+
 /*
   vérifie si toutes les cases blanches sont bien connectées entre elles
-  * return {int} 1 si elles sont bien connéctées, 0 sinon
+  * return {int} 1 si elles sont bien connectées, 0 sinon
 */
 int connexe()
 {
@@ -308,22 +319,31 @@ int connexe()
   * {int} 
 */
 int* genRandomAlreadyConnexe = new int[NB_COLONNES*NB_LIGNES];
-int tosrand = 0;
 int genGetRandomPosition()
 {
   int shouldContinue = 1;
+  int tosrand = time(NULL);
   int random = 0;
+  int maxRecursion = 1000;
+  int recursion = 0;
   do
   {
+    recursion++;
     tosrand+=1;
     srand(tosrand);
     random = ((double) rand())/RAND_MAX*(NB_COLONNES*NB_LIGNES-2)+1;
     if(Grille[random]==AFF_VIDE && random!=0 && genRandomAlreadyConnexe[random]==0)
     {
       shouldContinue=0;
-      printf("%d\n",random);
     }
-  }while(shouldContinue);
+  }while(shouldContinue && recursion<=maxRecursion);
+
+  if(recursion>=maxRecursion)
+  {
+    printf("%s\n","Erreur : limite de récursion pour la génération du labyrithne atteinte");
+    return -1;
+  }
+
   return random;
 }
 
@@ -331,7 +351,8 @@ void gen_lab(int k){
   if(k<(NB_COLONNES+NB_COLONNES-1))
   {
     printf("%s\n","Erreur : pas assez de cases blanches pour générer un labyrinthe intéressant");
-  }else{
+  }else
+  {
     // Première étape, on construit des murs partout sauf à l'entrée à et à la sortie
     for(int x=0;x<NB_LIGNES;x++)
     {
@@ -342,14 +363,12 @@ void gen_lab(int k){
       } 
     }
 
-    // L'algorithme est très loin d'être efficace car il compte sur l'aléatoire ( d'où la protection maxRecursion )
-    // ici on ajoute des cases blanches aléatoirements
-    int maxRecursion = NB_COLONNES*NB_LIGNES*100;
-    int recursionCount = 0;
     int wallToBuildRemaining = (NB_COLONNES*NB_COLONNES)-k;
+    int canContinue = 1;
     do
     {
       int randomPositionID = genGetRandomPosition();
+      canContinue = randomPositionID!=-1;
       Grille[randomPositionID]=AFF_MUR;
       int connexeResult = connexe();
       if(connexeResult)
@@ -362,26 +381,13 @@ void gen_lab(int k){
         Grille[randomPositionID]=AFF_VIDE;
         genRandomAlreadyConnexe[randomPositionID]=1;
       }
-      recursionCount++;
-    }while(wallToBuildRemaining>0&&recursionCount<=maxRecursion);
-    
-    if(recursionCount>=maxRecursion)
-    {
-      printf("%s\n","Erreur : limite de récursion pour la génération du labyrithne atteinte");
-    }
+    }while(wallToBuildRemaining>0 && canContinue);
   }
 }
 
 int main()
 {
-  for(int x=0;x<NB_LIGNES;x++)
-  {
-    for(int y=0;y<NB_COLONNES;y++)
-    {
-      int id = getID(x,y);
-      Grille[id]=AFF_VIDE;
-    }
-  }
+  gen_lab(7);
   modifie(1,1,AFF_MUR);
   modifie(1,2,AFF_MUR);
   affiche();
