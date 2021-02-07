@@ -4,7 +4,7 @@
 
 int* fillRand(int* tab, int n, int k){
   for(int x=0;x<n;x++){
-    srand(x);
+    srand(time(NULL)+x);
     int random = ((double) rand())/RAND_MAX*k; //*k;
     tab[x]=random;
   }

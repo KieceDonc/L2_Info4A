@@ -9,8 +9,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NB_COLONNES 4 //Longueur de la grille(nombre de colonnes)
-#define NB_LIGNES 4   //Largeur de la grille(nombre de lignes)
+#define NB_COLONNES 10 //Longueur de la grille(nombre de colonnes)
+#define NB_LIGNES 10   //Largeur de la grille(nombre de lignes)
 #define AFF_VIDE '-'  //Caractère représentant les cases vides pour l’affichage
 #define AFF_MUR  'X'  //Caractère représentant les murs pour l’affichage
 #define AFF_BORD ' '  //Caractère représentant les bords pour l’affichage
@@ -280,8 +280,13 @@ void showPile(){
 */
 int connexe()
 {
-  free(Pile);
-  Pile = new int[NB_COLONNES*NB_LIGNES];
+  for(int x=0;x<NB_COLONNES;x++)
+  {
+    for(int y=0;y<NB_LIGNES;y++)
+    {
+      Pile[getID(x,y)]=0;
+    }
+  }
   int realWhiteSquareCount = 0;
   int randomSquareID=0;
   for(int x=0;x<NB_LIGNES;x++)
@@ -296,10 +301,6 @@ int connexe()
       }
     }
   }
-  if(DEBUG){
-    showPile();
-    affiche();
-  }
   if(realWhiteSquareCount == 0)
   {
     printf("%s\n","Erreur : aucune case blanche");
@@ -310,6 +311,10 @@ int connexe()
     if(DEBUG)
     {
       printf("%s %d %s %d\n","Nombre de cases blanches détectées = ",detectedWhiteSquareCount,", Nombre de cases blanches réelles = ",realWhiteSquareCount);
+      if(detectedWhiteSquareCount>realWhiteSquareCount)
+      {
+        printf("detectedWhiteSquareCount>realWhiteSquareCount");
+      }
     }
     return detectedWhiteSquareCount==realWhiteSquareCount;
   }
@@ -328,7 +333,7 @@ int genGetRandomPosition()
   int shouldContinue = 1;
   int tosrand = time(NULL);
   int random = 0;
-  int maxRecursion = 1000;
+  int maxRecursion = NB_COLONNES*NB_LIGNES*100;
   int recursion = 0;
   do
   {
@@ -344,7 +349,10 @@ int genGetRandomPosition()
 
   if(recursion>=maxRecursion)
   {
-    printf("%s\n","Erreur : limite de récursion pour la génération du labyrithne atteinte");
+    if(DEBUG)
+    {
+      printf("%s\n","Erreur : limite de récursion pour la génération du labyrithne atteinte");
+    }
     return -1;
   }
 
@@ -378,8 +386,13 @@ void gen_lab(int k){
       if(connexeResult)
       {
         wallToBuildRemaining--;
-        free(genRandomAlreadyConnexe);
-        genRandomAlreadyConnexe = new int[NB_COLONNES*NB_LIGNES];
+      for(int x=0;x<NB_COLONNES;x++)
+        {
+          for(int y=0;y<NB_LIGNES;y++)
+          {
+            genRandomAlreadyConnexe[getID(x,y)]=0;
+          }
+        }
       }else
       {
         Grille[randomPositionID]=AFF_VIDE;
@@ -391,12 +404,8 @@ void gen_lab(int k){
 
 int main()
 {
-  gen_lab(7);
-  modifie(1,1,AFF_MUR);
-  modifie(1,2,AFF_MUR);
+  gen_lab(35);
   affiche();
-
-
   free(Pile);
   free(genRandomAlreadyConnexe);
   return 0;

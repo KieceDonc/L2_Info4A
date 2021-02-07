@@ -13,6 +13,9 @@ unsigned int divPar16(int x)
 }
 
 int main(){
-  printf("%d\n",18>>4);
+  int x = 16+8;
+  printf("%d\n",x%16);
+  printf("%d\n",divPar16(x));
+  printf("%d\n",x>>4);
   return 0;  
 }
