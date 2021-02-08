@@ -112,7 +112,6 @@ void affiche()
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 
 int* Pile = NULL;
-int Sommet = 0;
 
 /*
   empile un entier à la case id
@@ -120,50 +119,195 @@ int Sommet = 0;
 */
 void push(int id)
 {
-  Pile[Sommet]=id;
-  Sommet+=1;
+  Pile[id]=PUSH_VALUE;
 }
 
-int pop()
+/*
+  dépile un entier à la case id et le retourne
+  * {int} id 
+  * return {int} valeur de la case id dans la pile
+*/
+int pop(int id)
 {
-  int value = Pile[Sommet];
-  Sommet-=1;
-  return value;
+  int valeur = Pile[id];
+  Pile[id]= POP_VALUE;
+  return valeur;  
 }
 
-void marque(int id)
+/*
+  retourne l'id de la case au dessus de celle donnée en paramètre
+  * {int} id de la case
+  * return {int}
+*/
+int getCaseSuperieurID(int id)
 {
-  push(id);
-  Grille[id]=2;
-}
-
-int connexe(){
-  int casesBlanchesNb = 0;
-  int idCaseBlanche = 0;
-  for(int id = 0;id<NB_COLONNES*NB_LIGNES;id++)
+  int up_ID = id-NB_LIGNES;
+  int oldColumn = getCol(id);
+  int newColumn = getCol(up_ID);
+  if(up_ID<0 || oldColumn != newColumn)
   {
-    if(Grille[id]==AFF_VIDE)
+    return -1;
+  }else
+  {
+    return up_ID;
+  }
+}
+
+/*
+  retourne l'id de la case en dessous de celle donnée en paramètre
+  * {int} id de la case
+  * return {int}
+*/
+int getCaseInferieurID(int id)
+{
+  int down_ID = id+NB_LIGNES;
+  int oldColumn = getCol(id);
+  int newColumn = getCol(down_ID);
+  if(down_ID>(NB_LIGNES*NB_COLONNES-1) || oldColumn != newColumn)
+  {
+    return -1;
+  }else
+  {
+    return down_ID;
+  }
+}
+
+/*
+  retourne l'id de la case à gauche de celle donnée en paramètre
+  * {int} id de la case
+  * return {int}
+*/
+int getCaseGaucheID(int id)
+{
+  int left_ID = id-1;
+  int newRow = getLigne(left_ID);
+  int oldRow = getLigne(id);
+  if(left_ID<0 || oldRow != newRow)
+  {
+    return -1;
+  }else{
+    return left_ID;
+  }
+}
+
+/*
+  retourne l'id de la case à droite de celle donnée en paramètre
+  * {int} id de la case
+  * return {int}
+*/
+int getCaseDroiteID(int id)
+{
+  int right_ID = id+1;
+  int newRow = getLigne(right_ID);
+  int oldRow = getLigne(id);
+  if(right_ID>(NB_LIGNES*NB_COLONNES-1) || oldRow != newRow)
+  {
+    return -1;
+  }else{
+    return right_ID;
+  }
+}
+
+/*
+  compte le nombre de cases blanches connectées entre elles à partir de la case id  
+  * {int} id
+  * return {int} 
+*/
+int nombreCasesBlanchesDetecter(int id)
+{
+  int square_up_id = getCaseSuperieurID(id);
+  int square_down_id = getCaseInferieurID(id);
+  int square_left_id = getCaseGaucheID(id);
+  int square_right_id = getCaseDroiteID(id);  
+
+  int whiteCount = 0;
+
+  if(square_up_id!=-1)
+  {
+    int square_up_value = pop(square_up_id);
+    if(square_up_value==PUSH_VALUE)
     {
-      casesBlanchesNb+=1;
-      idCaseBlanche=id;
-      marque(id);
+      whiteCount+=1;
+      whiteCount+=nombreCasesBlanchesDetecter(square_up_id);
     }
-  } 
-  if(casesBlanchesNb == 0)
+  }
+
+  if(square_down_id!=-1)
+  {
+    int square_down_value = pop(square_down_id);
+    if(square_down_value==PUSH_VALUE)
+    {
+      whiteCount+=1;
+      whiteCount+=nombreCasesBlanchesDetecter(square_down_id);
+    }
+  }
+
+  if(square_left_id!=-1)
+  {
+    int square_left_value = pop(square_left_id);
+    if(square_left_value==PUSH_VALUE)
+    {  
+      whiteCount+=1;
+      whiteCount+=nombreCasesBlanchesDetecter(square_left_id);
+    }
+  }
+
+  if(square_right_id!=-1)
+  {
+    int square_right_value = pop(square_right_id);
+    if(square_right_value==PUSH_VALUE)
+    {
+      whiteCount+=1;
+      whiteCount+=nombreCasesBlanchesDetecter(square_right_id);
+    }
+  }
+
+  return whiteCount;
+}
+
+/*
+  vérifie si toutes les cases blanches sont bien connectées entre elles
+  * return {int} 1 si elles sont bien connectées, 0 sinon
+*/
+int connexe()
+{
+  for(int x=0;x<NB_COLONNES;x++)
+  {
+    for(int y=0;y<NB_LIGNES;y++)
+    {
+      Pile[getID(x,y)]=0;
+    }
+  }
+  int realWhiteSquareCount = 0;
+  int randomSquareID=0;
+  for(int x=0;x<NB_LIGNES;x++)
+  {
+    for(int y=0;y<NB_COLONNES;y++)
+    {
+      int id = getID(x,y);
+      if(Grille[id] == AFF_VIDE)
+      {
+        push(id);
+        realWhiteSquareCount++;
+      }
+    }
+  }
+  if(realWhiteSquareCount == 0)
   {
     printf("%s\n","Erreur : aucune case blanche");
     return 0;
-  }else{
-    do{
-      int id = pop();
-      if (id%L!=0)
+  }else
+  {
+    int detectedWhiteSquareCount = nombreCasesBlanchesDetecter(randomSquareID);
+    if(DEBUG)
+    {
+      printf("%s %d %s %d\n","Nombre de cases blanches détectées = ",detectedWhiteSquareCount,", Nombre de cases blanches réelles = ",realWhiteSquareCount);
+      if(detectedWhiteSquareCount>realWhiteSquareCount)
       {
-        marque(id-1);
+        printf("detectedWhiteSquareCount>realWhiteSquareCount");
       }
-      if (id%L!=L-1) marque(id+1);
-      if (id>=L) marque(id-L);
-      if (id<L*(M-1)) marque(id+L);
-    }while(Sommet<=0);
+    }
+    return detectedWhiteSquareCount==realWhiteSquareCount;
   }
 }
 
