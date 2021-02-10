@@ -6,14 +6,15 @@
   commande pour exécuter
 */
 #include <stdio.h>
+#include <stdlib.h>
 
-#define NB_COLONNES 4 //Longueur de la grille(nombre de colonnes)
-#define NB_LIGNES 3   //Largeur de la grille(nombre de lignes)
-#define AFF_VIDE '-'  //Caractère représentant les cases vides pour l’affichage
-#define AFF_MUR  'X'  //Caractère représentant les murs pour l’affichage
-#define AFF_BORD 'M'  //Caractère représentant les bords pour l’affichage
+#define NB_COLONNES 4 // Longueur de la grille(nombre de colonnes)
+#define NB_LIGNES 3   // Largeur de la grille(nombre de lignes)
+#define AFF_VIDE '-'  // Caractère représentant les cases vides pour l’affichage
+#define AFF_MUR  'X'  // Caractère représentant les murs pour l’affichage
+#define AFF_BORD 'M'  // Caractère représentant les bords pour l’affichage
 
-char Grille[NB_COLONNES*NB_LIGNES] = {0};
+char* Grille = NULL;
 
 /*
   retourne l'identifiant d'une case avec la ligne et colonne donnée en paramètre 
@@ -104,6 +105,7 @@ void affiche()
 
 int main()
 {
+  Grille = (char*)calloc(NB_LIGNES*NB_COLONNES,sizeof(char));
   for(int x=0;x<NB_LIGNES;x++)
   {
     for(int y=0;y<NB_COLONNES;y++)
@@ -115,5 +117,6 @@ int main()
   modifie(1,1,AFF_MUR);
   modifie(1,2,AFF_MUR);
   affiche();
+  free(Grille);
   return 0;
 }

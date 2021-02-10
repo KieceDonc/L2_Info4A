@@ -9,16 +9,15 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NB_COLONNES 10 //Longueur de la grille(nombre de colonnes)
-#define NB_LIGNES 10   //Largeur de la grille(nombre de lignes)
-#define AFF_VIDE '-'  //Caractère représentant les cases vides pour l’affichage
-#define AFF_MUR  'X'  //Caractère représentant les murs pour l’affichage
-#define AFF_BORD ' '  //Caractère représentant les bords pour l’affichage
-#define POP_VALUE 0   // Valeur utiliser pour dépiler un entier
-#define PUSH_VALUE 2  // Valeur utiliser pour empiler un entier
-#define DEBUG 1       // utiliser pour le debug
+#define NB_COLONNES 10  // Longueur de la grille(nombre de colonnes)
+#define NB_LIGNES 10    // Largeur de la grille(nombre de lignes)
+#define AFF_VIDE '-'    // Caractère représentant les cases vides pour l’affichage
+#define AFF_MUR  'X'    // Caractère représentant les murs pour l’affichage
+#define AFF_BORD ' '    // Caractère représentant les bords pour l’affichage
+#define PUSH_VALUE 2    // Valeur utiliser pour empiler un entier
+#define DEBUG 1         // utiliser pour le debug
 
-char Grille[NB_COLONNES*NB_LIGNES] = {0};
+char* Grille = NULL;
 
 /*
   retourne l'identifiant d'une case avec la ligne et colonne donnée en paramètre 
@@ -111,7 +110,8 @@ void affiche()
 // Début de la partie 2
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 
-int* Pile = NULL;
+//int* Pile = NULL;
+int* Pile=NULL;
 int Sommet = 0;
 
 /*
@@ -126,44 +126,75 @@ void push(int id)
 
 int pop()
 {
-  int value = Pile[Sommet];
   Sommet-=1;
+  int value = Pile[Sommet];
   return value;
 }
 
 void marque(int id)
 {
-  push(id);
-  Grille[id]=2;
+  if(id>=0 && id<(NB_COLONNES*NB_LIGNES) && Grille[id]==AFF_VIDE)
+  {
+    printf("%d ",id);
+    push(id);
+    Grille[id]=PUSH_VALUE;
+  }else{
+    printf("(%d) ",id);
+  }
 }
 
 int connexe(){
   int casesBlanchesNb = 0;
-  int idCaseBlanche = 0;
   for(int id = 0;id<NB_COLONNES*NB_LIGNES;id++)
   {
     if(Grille[id]==AFF_VIDE)
     {
       casesBlanchesNb+=1;
-      idCaseBlanche=id;
-      marque(id);
+      if(Sommet==0)
+      {
+        marque(id);
+      }
     }
   } 
   if(casesBlanchesNb == 0)
   {
     printf("%s\n","Erreur : aucune case blanche");
     return 0;
-  }else{
-    do{
+  }else
+  {
+    do
+    {
       int id = pop();
-      if (id%L!=0)
+      if (getLigne(id-1)==getLigne(id))
       {
         marque(id-1);
       }
-      if (id%L!=L-1) marque(id+1);
-      if (id>=L) marque(id-L);
-      if (id<L*(M-1)) marque(id+L);
-    }while(Sommet<=0);
+      if (getLigne(id+1)==getLigne(id))
+      {
+        marque(id+1);
+      }
+      if (id-NB_LIGNES>=0) 
+      {
+        marque(id-NB_LIGNES);
+      }
+      if ((id+NB_LIGNES)<=NB_COLONNES*NB_LIGNES-1)
+      {
+        marque(id+NB_LIGNES);
+      }
+    }while(Sommet>=0);
+    Sommet+=1;
+
+    int casesBlanchesMarquerNb = 0;
+    for (int x=0;x<NB_COLONNES*NB_LIGNES;x++)
+    {
+      if (Grille[x]==PUSH_VALUE)
+      {
+        casesBlanchesMarquerNb+=1;
+        Grille[x] = AFF_VIDE;
+      }
+    }
+    printf("\n%d %d\n",casesBlanchesMarquerNb,casesBlanchesNb);
+    return casesBlanchesMarquerNb==casesBlanchesNb;
   }
 }
 
@@ -174,7 +205,7 @@ int connexe(){
   une case au dessus / en dessous / à gauche / à droite pour la génération du labyrinthes
   * {int} 
 */
-int* genRandomAlreadyConnexe = NULL;
+int* genRandomAlreadyConnexe=NULL;
 int genGetRandomPosition()
 {
   int shouldContinue = 1;
@@ -212,7 +243,6 @@ void gen_lab(int k){
     printf("%s\n","Erreur : pas assez de cases blanches pour générer un labyrinthe intéressant");
   }else
   {
-    // Première étape, on construit des murs partout sauf à l'entrée à et à la sortie
     for(int x=0;x<NB_LIGNES;x++)
     {
       for(int y=0;y<NB_COLONNES;y++)
@@ -230,6 +260,7 @@ void gen_lab(int k){
       canContinue = randomPositionID!=-1;
       Grille[randomPositionID]=AFF_MUR;
       int connexeResult = connexe();
+      affiche();
       if(connexeResult)
       {
         wallToBuildRemaining--;
@@ -251,15 +282,17 @@ void gen_lab(int k){
 
 int disMin(int id1, int id2)
 {
-
+  return 0;
 }
 
 int main()
 {
-  Pile = new int[NB_COLONNES*NB_LIGNES];
-  genRandomAlreadyConnexe = new int[NB_COLONNES*NB_LIGNES];
-  gen_lab(55);
+  Grille = (char*)calloc((NB_LIGNES*NB_COLONNES),sizeof(char));
+  Pile = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int)); 
+  genRandomAlreadyConnexe = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int));
+  gen_lab(19);
   affiche();
+  free(Grille);
   free(Pile);
   free(genRandomAlreadyConnexe);
   return 0;
