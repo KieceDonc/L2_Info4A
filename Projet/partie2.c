@@ -9,8 +9,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NB_COLONNES 10  // Longueur de la grille(nombre de colonnes)
-#define NB_LIGNES 10    // Largeur de la grille(nombre de lignes)
+#define NB_COLONNES 15  // Longueur de la grille(nombre de colonnes)
+#define NB_LIGNES 19    // Largeur de la grille(nombre de lignes)
 #define AFF_VIDE '-'    // Caractère représentant les cases vides pour l’affichage
 #define AFF_MUR  'X'    // Caractère représentant les murs pour l’affichage
 #define AFF_BORD ' '    // Caractère représentant les bords pour l’affichage
@@ -29,6 +29,7 @@ int getID(int ligne, int colonne)
 { 
   if(colonne>=NB_COLONNES || ligne >=NB_LIGNES)
   {
+    printf("%d %d\n",ligne,colonne);
     printf("%s\n","Erreur, impossible d'avoir cette ID");
     return -1;
   } 
@@ -135,11 +136,8 @@ void marque(int id)
 {
   if(id>=0 && id<(NB_COLONNES*NB_LIGNES) && Grille[id]==AFF_VIDE)
   {
-    printf("%d ",id);
     push(id);
     Grille[id]=PUSH_VALUE;
-  }else{
-    printf("(%d) ",id);
   }
 }
 
@@ -193,7 +191,6 @@ int connexe(){
         Grille[x] = AFF_VIDE;
       }
     }
-    printf("\n%d %d\n",casesBlanchesMarquerNb,casesBlanchesNb);
     return casesBlanchesMarquerNb==casesBlanchesNb;
   }
 }
@@ -258,23 +255,24 @@ void gen_lab(int k){
     {
       int randomPositionID = genGetRandomPosition();
       canContinue = randomPositionID!=-1;
-      Grille[randomPositionID]=AFF_MUR;
-      int connexeResult = connexe();
-      affiche();
-      if(connexeResult)
-      {
-        wallToBuildRemaining--;
-      for(int x=0;x<NB_COLONNES;x++)
+      if(canContinue){
+        Grille[randomPositionID]=AFF_MUR;
+        int connexeResult = connexe();
+        if(connexeResult)
         {
-          for(int y=0;y<NB_LIGNES;y++)
+          wallToBuildRemaining--;
+        for(int x=0;x<NB_COLONNES;x++)
           {
-            genRandomAlreadyConnexe[getID(x,y)]=0;
+            for(int y=0;y<NB_LIGNES;y++)
+            {
+              genRandomAlreadyConnexe[getID(x,y)]=0;
+            }
           }
+        }else
+        {
+          Grille[randomPositionID]=AFF_VIDE;
+          genRandomAlreadyConnexe[randomPositionID]=1;
         }
-      }else
-      {
-        Grille[randomPositionID]=AFF_VIDE;
-        genRandomAlreadyConnexe[randomPositionID]=1;
       }
     }while(wallToBuildRemaining>0 && canContinue);
   }
@@ -290,7 +288,7 @@ int main()
   Grille = (char*)calloc((NB_LIGNES*NB_COLONNES),sizeof(char));
   Pile = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int)); 
   genRandomAlreadyConnexe = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int));
-  gen_lab(19);
+  gen_lab(50);
   affiche();
   free(Grille);
   free(Pile);
