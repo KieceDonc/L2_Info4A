@@ -29,7 +29,6 @@ int getID(int ligne, int colonne)
 { 
   if(colonne>=NB_COLONNES || ligne >=NB_LIGNES)
   {
-    printf("%d %d\n",ligne,colonne);
     printf("%s\n","Erreur, impossible d'avoir cette ID");
     return -1;
   } 
@@ -148,12 +147,9 @@ int connexe(){
     if(Grille[id]==AFF_VIDE)
     {
       casesBlanchesNb+=1;
-      if(Sommet==0)
-      {
-        marque(id);
-      }
     }
   } 
+  marque(0);
   if(casesBlanchesNb == 0)
   {
     printf("%s\n","Erreur : aucune case blanche");
@@ -171,13 +167,13 @@ int connexe(){
       {
         marque(id+1);
       }
-      if (id-NB_LIGNES>=0) 
+      if (id-NB_COLONNES>=0) 
       {
-        marque(id-NB_LIGNES);
+        marque(id-NB_COLONNES);
       }
-      if ((id+NB_LIGNES)<=NB_COLONNES*NB_LIGNES-1)
+      if ((id+NB_COLONNES)<=NB_COLONNES*NB_LIGNES-1)
       {
-        marque(id+NB_LIGNES);
+        marque(id+NB_COLONNES);
       }
     }while(Sommet>=0);
     Sommet+=1;
@@ -190,6 +186,10 @@ int connexe(){
         casesBlanchesMarquerNb+=1;
         Grille[x] = AFF_VIDE;
       }
+    }
+
+    for(int x=0;x<NB_COLONNES*NB_LIGNES;x++){
+      Pile[x]=0;
     }
     return casesBlanchesMarquerNb==casesBlanchesNb;
   }
@@ -235,7 +235,7 @@ int genGetRandomPosition()
 }
 
 void gen_lab(int k){
-  if(k<(NB_COLONNES+NB_COLONNES-1))
+  if(k<(NB_COLONNES+NB_LIGNES-1))
   {
     printf("%s\n","Erreur : pas assez de cases blanches pour générer un labyrinthe intéressant");
   }else
@@ -261,9 +261,9 @@ void gen_lab(int k){
         if(connexeResult)
         {
           wallToBuildRemaining--;
-        for(int x=0;x<NB_COLONNES;x++)
+          for(int x=0;x<NB_LIGNES;x++)
           {
-            for(int y=0;y<NB_LIGNES;y++)
+            for(int y=0;y<NB_COLONNES;y++)
             {
               genRandomAlreadyConnexe[getID(x,y)]=0;
             }
@@ -288,7 +288,7 @@ int main()
   Grille = (char*)calloc((NB_LIGNES*NB_COLONNES),sizeof(char));
   Pile = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int)); 
   genRandomAlreadyConnexe = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int));
-  gen_lab(50);
+  gen_lab(33);
   affiche();
   free(Grille);
   free(Pile);
