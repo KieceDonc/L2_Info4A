@@ -7,13 +7,12 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
-
-#define NB_COLONNES 4 // Longueur de la grille(nombre de colonnes)
-#define NB_LIGNES 3   // Largeur de la grille(nombre de lignes)
 #define AFF_VIDE '-'  // Caractère représentant les cases vides pour l’affichage
 #define AFF_MUR  'X'  // Caractère représentant les murs pour l’affichage
 #define AFF_BORD 'M'  // Caractère représentant les bords pour l’affichage
 
+int NB_COLONNES = 4; // Longueur de la grille(nombre de colonnes)
+int NB_LIGNES = 3;   // Largeur de la grille(nombre de lignes)
 char* Grille = NULL;
 
 /*

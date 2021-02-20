@@ -1,22 +1,15 @@
-/*
-  gcc Valentin_VERSTRACTE_partie1.cpp -g -Wall -o Valentin_VERSTRACTE_partie1
-  commande pour compiler
-  
-  ./Valentin_VERSTRACTE_partie1 
-  commande pour exécuter
-*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#define NB_COLONNES 15  // Longueur de la grille(nombre de colonnes)
-#define NB_LIGNES 19    // Largeur de la grille(nombre de lignes)
 #define AFF_VIDE '-'    // Caractère représentant les cases vides pour l’affichage
 #define AFF_MUR  'X'    // Caractère représentant les murs pour l’affichage
 #define AFF_BORD ' '    // Caractère représentant les bords pour l’affichage
 #define PUSH_VALUE 2    // Valeur utiliser pour empiler un entier
 #define DEBUG 1         // utiliser pour le debug
 
+int NB_COLONNES = 10; // Longueur de la grille(nombre de colonnes)
+int NB_LIGNES = 10;   // Largeur de la grille(nombre de lignes)
 char* Grille = NULL;
 
 /*
@@ -110,7 +103,38 @@ void affiche()
 // Début de la partie 2
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 
-//int* Pile = NULL;
+int getUpID(int id){
+  if(id-NB_COLONNES>=0){
+    return id-NB_COLONNES;
+  }else{
+    return -1;
+  }
+}
+
+int getDownID(int id){
+  if((id+NB_COLONNES)<=NB_COLONNES*NB_LIGNES-1){
+    return id+NB_COLONNES;
+  }else{
+    return -1;
+  }
+}
+
+int getLeftID(int id){
+  if(getLigne(id-1)==getLigne(id)){
+    return id-1;
+  }else{
+    return -1;
+  }
+}
+
+int getRightID(int id){
+  if(getLigne(id+1)==getLigne(id)){
+    return id+1;
+  }else{
+    return -1;
+  }
+}
+
 int* Pile=NULL;
 int Sommet = 0;
 
@@ -159,21 +183,21 @@ int connexe(){
     do
     {
       int id = pop();
-      if (getLigne(id-1)==getLigne(id))
-      {
-        marque(id-1);
+      int id_up = getUpID(id);
+      int id_down = getDownID(id);
+      int id_left = getLeftID(id);
+      int id_right = getRightID(id);
+      if(id_up!=-1){
+        marque(id_up);
       }
-      if (getLigne(id+1)==getLigne(id))
-      {
-        marque(id+1);
+      if(id_down!=-1){
+        marque(id_down);
       }
-      if (id-NB_COLONNES>=0) 
-      {
-        marque(id-NB_COLONNES);
+      if(id_left!=-1){
+        marque(id_left);
       }
-      if ((id+NB_COLONNES)<=NB_COLONNES*NB_LIGNES-1)
-      {
-        marque(id+NB_COLONNES);
+      if(id_right!=-1){
+        marque(id_right);
       }
     }while(Sommet>=0);
     Sommet+=1;
@@ -202,8 +226,7 @@ int connexe(){
   une case au dessus / en dessous / à gauche / à droite pour la génération du labyrinthes
   * {int} 
 */
-int* genRandomAlreadyConnexe=NULL;
-int genGetRandomPosition()
+int genGetRandomPosition(int* genRandomAlreadyConnexe)
 {
   int shouldContinue = 1;
   int tosrand = time(NULL);
@@ -249,13 +272,15 @@ void gen_lab(int k){
       } 
     }
 
-    int wallToBuildRemaining = (NB_COLONNES*NB_COLONNES)-k;
+    int* genRandomAlreadyConnexe = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int)); // retiens les nombres aléatoires non connexe 
+    int wallToBuildRemaining = (NB_COLONNES*NB_LIGNES)-k;
     int canContinue = 1;
     do
     {
-      int randomPositionID = genGetRandomPosition();
+      int randomPositionID = genGetRandomPosition(genRandomAlreadyConnexe);
       canContinue = randomPositionID!=-1;
-      if(canContinue){
+      if(canContinue)
+      {
         Grille[randomPositionID]=AFF_MUR;
         int connexeResult = connexe();
         if(connexeResult)
@@ -275,23 +300,109 @@ void gen_lab(int k){
         }
       }
     }while(wallToBuildRemaining>0 && canContinue);
+    free(genRandomAlreadyConnexe);
   }
 }
 
-int disMin(int id1, int id2)
-{
-  return 0;
+// https://stackoverflow.com/questions/8440816/warning-implicit-declaration-of-function
+static void distMarque(int id,int value,int* distPile);
+static void distMarqueVoisins(int id,int value,int* distPile);
+
+
+/*
+  Marque la distance de la case id par rapport à la première case passé en paramètre de distMarque
+  et demande à marquer les cases voisines de id (crée un appel récursif qui va marquer toutes les 
+  cases de la grille)
+*/
+void distMarque(int id,int value,int* distPile){
+  int disPileValue = distPile[id];
+  if(disPileValue==0){
+    distPile[id]=value;
+    distMarqueVoisins(id,value,distPile);
+  }else if(value<disPileValue){
+    distPile[id]=value;
+    distMarqueVoisins(id,value,distPile);
+  }
+}
+
+/*
+  Vérifie si les cases voisines peuvent marquer la distance de la case id par rapport à la première 
+  case passé en paramètre de distMarque, si oui les marques
+*/
+void distMarqueVoisins(int id,int value,int* distPile){
+  int id_up = getUpID(id);
+  int id_down = getDownID(id);
+  int id_left = getLeftID(id);
+  int id_right = getRightID(id);
+  if(id_up!=-1 && Grille[id_up]!=AFF_MUR){
+    if(Grille[id_up]==AFF_MUR){
+      printf("%dU\n",id);
+    }
+    distMarque(id_up,value+1,distPile);
+  }
+  if(id_down!=-1 && Grille[id_down]!=AFF_MUR){
+    if(Grille[id_down]==AFF_MUR){
+      printf("%dD\n",id);
+    }
+    distMarque(id_down,value+1,distPile);
+  }
+  if(id_left!=-1 && Grille[id_left]!=AFF_MUR){
+    if(Grille[id_left]==AFF_MUR){
+      printf("%dL\n",id);
+    }
+    distMarque(id_left,value+1,distPile);
+  }
+  if(id_right!=-1 && Grille[id_right]!=AFF_MUR){
+    if(Grille[id_right]==AFF_MUR){
+      printf("%dR\n",id);
+    }
+    distMarque(id_right,value+1,distPile);   
+  }
+}
+
+int distMin(int id_current, int id_dest){
+  int* distPile = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int));
+  distMarque(id_current,1,distPile);
+  int minValue = distPile[id_dest];
+  if(DEBUG){
+   for(int x=0;x<NB_COLONNES+2;x++)
+    {
+      printf("%c ",AFF_BORD);
+    }
+    printf("\n");
+    for(int x=0;x<NB_LIGNES;x++)
+    {
+      printf("%c ",AFF_BORD);
+      for(int y=0;y<NB_COLONNES;y++)
+      {
+        int id = getID(x,y);
+        printf("%d",distPile[id]);
+        if(distPile[id]>=10){
+          printf(" ");
+        }else{
+          printf("  ");
+        }
+      }
+      printf("%c\n",AFF_BORD);
+    }
+    for(int x=0;x<NB_COLONNES+2;x++)
+    {
+      printf("%c ",AFF_BORD);
+    }
+    printf("\n");
+  }
+  free(distPile);
+  return minValue-1;
 }
 
 int main()
 {
   Grille = (char*)calloc((NB_LIGNES*NB_COLONNES),sizeof(char));
   Pile = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int)); 
-  genRandomAlreadyConnexe = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int));
-  gen_lab(33);
+  gen_lab(30);
   affiche();
   free(Grille);
   free(Pile);
-  free(genRandomAlreadyConnexe);
+  printf("%d\n",distMin(0,NB_COLONNES*NB_LIGNES-1));
   return 0;
 }
