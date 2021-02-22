@@ -11,6 +11,8 @@
 int NB_COLONNES = 10; // Longueur de la grille(nombre de colonnes)
 int NB_LIGNES = 10;   // Largeur de la grille(nombre de lignes)
 char* Grille = NULL;
+int robotAPosition = -1;
+int robotBPosition = -1;
 
 /*
   retourne l'identifiant d'une case avec la ligne et colonne donnée en paramètre 
@@ -88,7 +90,16 @@ void affiche()
     for(int y=0;y<NB_COLONNES;y++)
     {
       int id = getID(x,y);
-      printf("%c ",Grille[id]);
+      if(id==robotAPosition)
+      {
+        printf("A ");
+      }else if(id==robotBPosition)
+      {
+        printf("B ");
+      }else
+      {
+        printf("%c ",Grille[id]);
+      }
     }
     printf("%c\n",AFF_BORD);
   }
@@ -308,7 +319,6 @@ void gen_lab(int k){
 static void distMarque(int id,int value,int* distPile);
 static void distMarqueVoisins(int id,int value,int* distPile);
 
-
 /*
   Marque la distance de la case id par rapport à la première case passé en paramètre de distMarque
   et demande à marquer les cases voisines de id (crée un appel récursif qui va marquer toutes les 
@@ -335,27 +345,15 @@ void distMarqueVoisins(int id,int value,int* distPile){
   int id_left = getLeftID(id);
   int id_right = getRightID(id);
   if(id_up!=-1 && Grille[id_up]!=AFF_MUR){
-    if(Grille[id_up]==AFF_MUR){
-      printf("%dU\n",id);
-    }
     distMarque(id_up,value+1,distPile);
   }
   if(id_down!=-1 && Grille[id_down]!=AFF_MUR){
-    if(Grille[id_down]==AFF_MUR){
-      printf("%dD\n",id);
-    }
     distMarque(id_down,value+1,distPile);
   }
   if(id_left!=-1 && Grille[id_left]!=AFF_MUR){
-    if(Grille[id_left]==AFF_MUR){
-      printf("%dL\n",id);
-    }
     distMarque(id_left,value+1,distPile);
   }
   if(id_right!=-1 && Grille[id_right]!=AFF_MUR){
-    if(Grille[id_right]==AFF_MUR){
-      printf("%dR\n",id);
-    }
     distMarque(id_right,value+1,distPile);   
   }
 }
@@ -364,45 +362,148 @@ int distMin(int id_current, int id_dest){
   int* distPile = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int));
   distMarque(id_current,1,distPile);
   int minValue = distPile[id_dest];
-  if(DEBUG){
-   for(int x=0;x<NB_COLONNES+2;x++)
-    {
-      printf("%c ",AFF_BORD);
-    }
-    printf("\n");
-    for(int x=0;x<NB_LIGNES;x++)
-    {
-      printf("%c ",AFF_BORD);
-      for(int y=0;y<NB_COLONNES;y++)
-      {
-        int id = getID(x,y);
-        printf("%d",distPile[id]);
-        if(distPile[id]>=10){
-          printf(" ");
-        }else{
-          printf("  ");
-        }
-      }
-      printf("%c\n",AFF_BORD);
-    }
-    for(int x=0;x<NB_COLONNES+2;x++)
-    {
-      printf("%c ",AFF_BORD);
-    }
-    printf("\n");
-  }
   free(distPile);
-  return minValue-1;
+  return minValue;
+}
+
+// l'idée est de calculer la plus grande distance au prochain "tour" entre le robot A et le robot B pour avoir le meilleur mouvement
+int bestMoveRobotAStrat1(){
+  int* dist = (int*)calloc((4),sizeof(int));
+  for(int x=0;x<4;x++){
+    dist[x]=NB_COLONNES*NB_LIGNES+50;
+  }
+
+  int id_up = getUpID(robotAPosition);
+  int id_down = getDownID(robotAPosition);
+  int id_left = getLeftID(robotAPosition);
+  int id_right = getRightID(robotAPosition);
+  
+  if(id_up!=-1 && Grille[id_up]!=AFF_MUR){
+    dist[0] = distMin(id_up,robotBPosition);
+  }
+  if(id_down!=-1 && Grille[id_down]!=AFF_MUR){
+    dist[1] = distMin(id_down,robotBPosition);
+  }
+  if(id_left!=-1 && Grille[id_left]!=AFF_MUR){
+    dist[2] = distMin(id_left,robotBPosition);
+  }
+  if(id_right!=-1 && Grille[id_right]!=AFF_MUR){
+    dist[3] = distMin(id_right,robotBPosition);
+  }
+
+  int bestDistIndex = 4;
+  int bestDist = distMin(robotAPosition,robotBPosition);
+  for(int x=0;x<4;x++){
+    if(dist[x]>bestDist){
+      bestDistIndex = x;
+      bestDist = dist[x];
+    }
+  }
+
+  free(dist);
+  
+  switch(bestDistIndex){
+    case 0 :{
+      return id_up;
+    };
+    case 1:{
+      return id_down;
+    };
+    case 2:{
+      return id_left;
+    }
+    case 3:{
+      return id_right;
+    }
+    case 4 :{
+      return robotAPosition;
+    }
+  }
+}
+
+// l'idée est de calculer la plus petite distance au prochain "tour" entre le robot A et le robot B pour avoir le meilleur mouvement
+int bestMoveRobotBStrat1(){
+  int* dist = (int*)calloc((4),sizeof(int));
+  for(int x=0;x<4;x++){
+    dist[x]=NB_COLONNES*NB_LIGNES+50;
+  }
+
+  int id_up = getUpID(robotBPosition);
+  int id_down = getDownID(robotBPosition);
+  int id_left = getLeftID(robotBPosition);
+  int id_right = getRightID(robotBPosition);
+  
+  if(id_up!=-1 && Grille[id_up]!=AFF_MUR){
+    dist[0] = distMin(robotAPosition,id_up);
+  }
+  if(id_down!=-1 && Grille[id_down]!=AFF_MUR){
+    dist[1] = distMin(robotAPosition,id_down);
+  }
+  if(id_left!=-1 && Grille[id_left]!=AFF_MUR){
+    dist[2] = distMin(robotAPosition,id_left);
+  }
+  if(id_right!=-1 && Grille[id_right]!=AFF_MUR){
+    dist[3] = distMin(robotAPosition,id_right);
+  }
+
+  int bestDistIndex = 4;
+  int bestDist = distMin(robotBPosition,robotAPosition);
+  for(int x=0;x<4;x++){
+    if(dist[x]<bestDist){
+      bestDistIndex = x;
+      bestDist = dist[x];
+    }
+  }
+
+  free(dist);
+  
+  switch(bestDistIndex){
+    case 0 :{
+      return id_up;
+    };
+    case 1:{
+      return id_down;
+    };
+    case 2:{
+      return id_left;
+    }
+    case 3:{
+      return id_right;
+    }
+    case 4 :{
+      return robotBPosition;
+    }
+  }
+}
+
+void simulationRobot(){
+  int cmptSimulation = 0;
+  robotAPosition=0;
+  robotBPosition=NB_COLONNES*NB_LIGNES-1;
+  affiche();
+
+  do{
+    cmptSimulation+=1;
+    robotAPosition = bestMoveRobotAStrat1();
+    robotBPosition = bestMoveRobotBStrat1();
+    affiche();
+  }while(robotAPosition!=robotBPosition && cmptSimulation<=NB_COLONNES*NB_LIGNES*100);
+
+  if(robotAPosition == robotBPosition){
+    printf("Le robot B a réussi à atteindre le robot A");
+  }else{
+    printf("Le robot B n'a pas réussi à atteindre le robot A");
+  }
 }
 
 int main()
 {
   Grille = (char*)calloc((NB_LIGNES*NB_COLONNES),sizeof(char));
   Pile = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int)); 
-  gen_lab(30);
+  gen_lab(30*2);
   affiche();
+  simulationRobot();
   free(Grille);
   free(Pile);
-  printf("%d\n",distMin(0,NB_COLONNES*NB_LIGNES-1));
   return 0;
 }
