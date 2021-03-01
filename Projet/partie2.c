@@ -369,9 +369,6 @@ int distMin(int id_current, int id_dest){
 // l'idée est de calculer la plus grande distance au prochain "tour" entre le robot A et le robot B pour avoir le meilleur mouvement
 int bestMoveRobotAStrat1(){
   int* dist = (int*)calloc((4),sizeof(int));
-  for(int x=0;x<4;x++){
-    dist[x]=NB_COLONNES*NB_LIGNES+50;
-  }
 
   int id_up = getUpID(robotAPosition);
   int id_down = getDownID(robotAPosition);
@@ -424,6 +421,7 @@ int bestMoveRobotAStrat1(){
 // l'idée est de calculer la plus petite distance au prochain "tour" entre le robot A et le robot B pour avoir le meilleur mouvement
 int bestMoveRobotBStrat1(){
   int* dist = (int*)calloc((4),sizeof(int));
+
   for(int x=0;x<4;x++){
     dist[x]=NB_COLONNES*NB_LIGNES+50;
   }
@@ -434,16 +432,19 @@ int bestMoveRobotBStrat1(){
   int id_right = getRightID(robotBPosition);
   
   if(id_up!=-1 && Grille[id_up]!=AFF_MUR){
-    dist[0] = distMin(robotAPosition,id_up);
+    dist[0] = distMin(id_up,robotAPosition);
   }
+
   if(id_down!=-1 && Grille[id_down]!=AFF_MUR){
-    dist[1] = distMin(robotAPosition,id_down);
+    dist[1] = distMin(id_down,robotAPosition);
   }
+
   if(id_left!=-1 && Grille[id_left]!=AFF_MUR){
-    dist[2] = distMin(robotAPosition,id_left);
+    dist[2] = distMin(id_left,robotAPosition);
   }
+
   if(id_right!=-1 && Grille[id_right]!=AFF_MUR){
-    dist[3] = distMin(robotAPosition,id_right);
+    dist[3] = distMin(id_right,robotAPosition);
   }
 
   int bestDistIndex = 4;
@@ -476,6 +477,14 @@ int bestMoveRobotBStrat1(){
   }
 }
 
+int bestMoveRobotAStrat2(){
+  return 0;
+}
+
+int bestMoveRobotBStrat2(){
+  return 0;
+}
+
 void simulationRobot(){
   int cmptSimulation = 0;
   robotAPosition=0;
@@ -490,9 +499,9 @@ void simulationRobot(){
   }while(robotAPosition!=robotBPosition && cmptSimulation<=NB_COLONNES*NB_LIGNES*100);
 
   if(robotAPosition == robotBPosition){
-    printf("Le robot B a réussi à atteindre le robot A");
+    printf("Le robot B a réussi à atteindre le robot A\n");
   }else{
-    printf("Le robot B n'a pas réussi à atteindre le robot A");
+    printf("Le robot B n'a pas réussi à atteindre le robot A\n");
   }
 }
 
