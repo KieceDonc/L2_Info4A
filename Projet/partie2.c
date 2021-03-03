@@ -114,34 +114,46 @@ void affiche()
 // Début de la partie 2
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 
-int getUpID(int id){
-  if(id-NB_COLONNES>=0){
+int getUpID(int id)
+{
+  if(id-NB_COLONNES>=0)
+  {
     return id-NB_COLONNES;
-  }else{
+  }else
+  {
     return -1;
   }
 }
 
-int getDownID(int id){
-  if((id+NB_COLONNES)<=NB_COLONNES*NB_LIGNES-1){
+int getDownID(int id)
+{
+  if((id+NB_COLONNES)<=NB_COLONNES*NB_LIGNES-1)
+  {
     return id+NB_COLONNES;
-  }else{
+  }else
+  {
     return -1;
   }
 }
 
-int getLeftID(int id){
-  if(getLigne(id-1)==getLigne(id)){
+int getLeftID(int id)
+{
+  if(getLigne(id-1)==getLigne(id))
+  {
     return id-1;
-  }else{
+  }else
+  {
     return -1;
   }
 }
 
-int getRightID(int id){
-  if(getLigne(id+1)==getLigne(id)){
+int getRightID(int id)
+{
+  if(getLigne(id+1)==getLigne(id))
+  {
     return id+1;
-  }else{
+  }else
+  {
     return -1;
   }
 }
@@ -167,7 +179,7 @@ int pop()
 }
 
 void marque(int id)
-{
+{#include <unistd.h>
   if(id>=0 && id<(NB_COLONNES*NB_LIGNES) && Grille[id]==AFF_VIDE)
   {
     push(id);
@@ -198,16 +210,20 @@ int connexe(){
       int id_down = getDownID(id);
       int id_left = getLeftID(id);
       int id_right = getRightID(id);
-      if(id_up!=-1){
+      if(id_up!=-1)
+      {
         marque(id_up);
       }
-      if(id_down!=-1){
+      if(id_down!=-1)
+      {
         marque(id_down);
       }
-      if(id_left!=-1){
+      if(id_left!=-1)
+      {
         marque(id_left);
       }
-      if(id_right!=-1){
+      if(id_right!=-1)
+      {
         marque(id_right);
       }
     }while(Sommet>=0);
@@ -223,7 +239,8 @@ int connexe(){
       }
     }
 
-    for(int x=0;x<NB_COLONNES*NB_LIGNES;x++){
+    for(int x=0;x<NB_COLONNES*NB_LIGNES;x++)
+    {
       Pile[x]=0;
     }
     return casesBlanchesMarquerNb==casesBlanchesNb;
@@ -312,196 +329,6 @@ void gen_lab(int k){
       }
     }while(wallToBuildRemaining>0 && canContinue);
     free(genRandomAlreadyConnexe);
-  }
-}
-
-// https://stackoverflow.com/questions/8440816/warning-implicit-declaration-of-function
-static void distMarque(int id,int value,int* distPile);
-static void distMarqueVoisins(int id,int value,int* distPile);
-
-/*
-  Marque la distance de la case id par rapport à la première case passé en paramètre de distMarque
-  et demande à marquer les cases voisines de id (crée un appel récursif qui va marquer toutes les 
-  cases de la grille)
-*/
-void distMarque(int id,int value,int* distPile){
-  int disPileValue = distPile[id];
-  if(disPileValue==0){
-    distPile[id]=value;
-    distMarqueVoisins(id,value,distPile);
-  }else if(value<disPileValue){
-    distPile[id]=value;
-    distMarqueVoisins(id,value,distPile);
-  }
-}
-
-/*
-  Vérifie si les cases voisines peuvent marquer la distance de la case id par rapport à la première 
-  case passé en paramètre de distMarque, si oui les marques
-*/
-void distMarqueVoisins(int id,int value,int* distPile){
-  int id_up = getUpID(id);
-  int id_down = getDownID(id);
-  int id_left = getLeftID(id);
-  int id_right = getRightID(id);
-  if(id_up!=-1 && Grille[id_up]!=AFF_MUR){
-    distMarque(id_up,value+1,distPile);
-  }
-  if(id_down!=-1 && Grille[id_down]!=AFF_MUR){
-    distMarque(id_down,value+1,distPile);
-  }
-  if(id_left!=-1 && Grille[id_left]!=AFF_MUR){
-    distMarque(id_left,value+1,distPile);
-  }
-  if(id_right!=-1 && Grille[id_right]!=AFF_MUR){
-    distMarque(id_right,value+1,distPile);   
-  }
-}
-
-int distMin(int id_current, int id_dest){
-  int* distPile = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int));
-  distMarque(id_current,1,distPile);
-  int minValue = distPile[id_dest];
-  free(distPile);
-  return minValue;
-}
-
-// l'idée est de calculer la plus grande distance au prochain "tour" entre le robot A et le robot B pour avoir le meilleur mouvement
-int bestMoveRobotAStrat1(){
-  int* dist = (int*)calloc((4),sizeof(int));
-
-  int id_up = getUpID(robotAPosition);
-  int id_down = getDownID(robotAPosition);
-  int id_left = getLeftID(robotAPosition);
-  int id_right = getRightID(robotAPosition);
-  
-  if(id_up!=-1 && Grille[id_up]!=AFF_MUR){
-    dist[0] = distMin(id_up,robotBPosition);
-  }
-  if(id_down!=-1 && Grille[id_down]!=AFF_MUR){
-    dist[1] = distMin(id_down,robotBPosition);
-  }
-  if(id_left!=-1 && Grille[id_left]!=AFF_MUR){
-    dist[2] = distMin(id_left,robotBPosition);
-  }
-  if(id_right!=-1 && Grille[id_right]!=AFF_MUR){
-    dist[3] = distMin(id_right,robotBPosition);
-  }
-
-  int bestDistIndex = 4;
-  int bestDist = distMin(robotAPosition,robotBPosition);
-  for(int x=0;x<4;x++){
-    if(dist[x]>bestDist){
-      bestDistIndex = x;
-      bestDist = dist[x];
-    }
-  }
-
-  free(dist);
-  
-  switch(bestDistIndex){
-    case 0 :{
-      return id_up;
-    };
-    case 1:{
-      return id_down;
-    };
-    case 2:{
-      return id_left;
-    }
-    case 3:{
-      return id_right;
-    }
-    case 4 :{
-      return robotAPosition;
-    }
-  }
-}
-
-// l'idée est de calculer la plus petite distance au prochain "tour" entre le robot A et le robot B pour avoir le meilleur mouvement
-int bestMoveRobotBStrat1(){
-  int* dist = (int*)calloc((4),sizeof(int));
-
-  for(int x=0;x<4;x++){
-    dist[x]=NB_COLONNES*NB_LIGNES+50;
-  }
-
-  int id_up = getUpID(robotBPosition);
-  int id_down = getDownID(robotBPosition);
-  int id_left = getLeftID(robotBPosition);
-  int id_right = getRightID(robotBPosition);
-  
-  if(id_up!=-1 && Grille[id_up]!=AFF_MUR){
-    dist[0] = distMin(id_up,robotAPosition);
-  }
-
-  if(id_down!=-1 && Grille[id_down]!=AFF_MUR){
-    dist[1] = distMin(id_down,robotAPosition);
-  }
-
-  if(id_left!=-1 && Grille[id_left]!=AFF_MUR){
-    dist[2] = distMin(id_left,robotAPosition);
-  }
-
-  if(id_right!=-1 && Grille[id_right]!=AFF_MUR){
-    dist[3] = distMin(id_right,robotAPosition);
-  }
-
-  int bestDistIndex = 4;
-  int bestDist = distMin(robotBPosition,robotAPosition);
-  for(int x=0;x<4;x++){
-    if(dist[x]<bestDist){
-      bestDistIndex = x;
-      bestDist = dist[x];
-    }
-  }
-
-  free(dist);
-  
-  switch(bestDistIndex){
-    case 0 :{
-      return id_up;
-    };
-    case 1:{
-      return id_down;
-    };
-    case 2:{
-      return id_left;
-    }
-    case 3:{
-      return id_right;
-    }
-    case 4 :{
-      return robotBPosition;
-    }
-  }
-}
-
-int bestMoveRobotAStrat2(){
-  return 0;
-}
-
-int bestMoveRobotBStrat2(){
-  return 0;
-}
-
-void simulationRobot(){
-  int cmptSimulation = 0;
-  robotAPosition=0;
-  robotBPosition=NB_COLONNES*NB_LIGNES-1;
-  affiche();
-
-  do{
-    cmptSimulation+=1;
-    robotAPosition = bestMoveRobotAStrat1();
-    robotBPosition = bestMoveRobotBStrat1();
-    affiche();
-  }while(robotAPosition!=robotBPosition && cmptSimulation<=NB_COLONNES*NB_LIGNES*100);
-
-  if(robotAPosition == robotBPosition){
-    printf("Le robot B a réussi à atteindre le robot A\n");
-  }else{
-    printf("Le robot B n'a pas réussi à atteindre le robot A\n");
   }
 }
 
