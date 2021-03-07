@@ -258,77 +258,71 @@ bool Laby::deplaceRobotA(int algo)
     // A COMPLETER AVEC AU MOINS UN ALGORITHME DE POURSUITE PREDATEUR
     int* dist = new int[4] {-1,-1,-1,-1};
 
-    int id_up = getUpID(this->getIdRobotA());
-    int id_down = getDownID(this->getIdRobotA());
-    int id_left = getLeftID(this->getIdRobotA());
-    int id_right = getRightID(this->getIdRobotA());
-    
-    if(id_up!=-1 && this->lit(id_up)!=1){
+    int id_up = this->getUpID(this->getIdRobotA());
+    int id_down = this->getDownID(this->getIdRobotA());
+    int id_left = this->getLeftID(this->getIdRobotA());
+    int id_right = this->getRightID(this->getIdRobotA());
+
+    if(id_up!=-1 && this->lit(id_up)==0){
         dist[0] = this->distMin(id_up,this->getIdRobotB());
     }
 
-    if(id_down!=-1 && this->lit(id_down)!=1){
+    if(id_down!=-1 && this->lit(id_down)==0){
         dist[1] = this->distMin(id_down,this->getIdRobotB());
     }
 
-    if(id_left!=-1 && this->lit(id_left)!=1){
+    if(id_left!=-1 && this->lit(id_left)==0){
         dist[2] = this->distMin(id_left,this->getIdRobotB());
     }
-
-    if(id_right!=-1 && this->lit(id_right)!=1){
+    
+    if(id_right!=-1 && this->lit(id_right)==0){
         dist[3] = this->distMin(id_right,this->getIdRobotB());
     }
 
-
-    int currentDist = this->distMin(this->getIdRobotA(),this->getIdRobotB());
     int availableDistLength = 0;
-
+    int currentDist = this->distMin(this->getIdRobotA(),this->getIdRobotB());
     for(int x=0;x<4;x++){
-        if(dist[x]==-1 || dist[x]>=currentDist){
-            dist[x]=-1;
-        }else{
+        if(dist[x]!=-1 && dist[x]<currentDist){
             availableDistLength+=1;
+        }else{
+            dist[x]=-1;
         }
     }
 
-    printf("Robot A - %dup %ddown %dleft %dright %dcurrent\n",dist[0],dist[1],dist[2],dist[3],currentDist);
-
-    if(!availableDistLength){
+    if(availableDistLength==0){
         delete[] dist;
         return true;
-    }else{
+    }else{ 
         int* availableDist = new int[availableDistLength];
         int availableDistIndex = 0;
-        for(int x=0;x<4;x++){
-            if(dist[x]!=-1){
-                switch (x)
-                {
-                case 0:
-                    availableDist[availableDistIndex]=id_up;
-                    break;
-                case 1:
-                    availableDist[availableDistIndex]=id_down;
-                    break;
-                case 2:
-                    availableDist[availableDistIndex]=id_left;
-                    break;
-                case 3:
-                    availableDist[availableDistIndex]=id_right;
-                    break;
-                }
-                availableDistIndex+=1;
-            }
+
+        if(dist[0]!=-1){
+            availableDist[availableDistIndex]=id_up;
+            availableDistIndex+=1;
         }
 
-        srand(time(NULL));
-        int random = (int)(((double) rand())/RAND_MAX*(availableDistLength))+1;
-        
+        if(dist[1]!=-1){
+            availableDist[availableDistIndex]=id_down;
+            availableDistIndex+=1;
+        }
+
+        if(dist[2]!=-1){
+            availableDist[availableDistIndex]=id_left;
+            availableDistIndex+=1;
+        }
+
+        if(dist[3]!=-1){
+            availableDist[availableDistIndex]=id_right;
+            availableDistIndex+=1;
+        }
+
+        int random = ((double) rand())/RAND_MAX*(availableDistLength)-1;
         int newPosition = availableDist[random];
-        
-        delete[] availableDist;
+
         delete[] dist;
+        delete[] availableDist;
+
         if(newPosition!=this->getIdRobotB()){
-            printf("Robot A - old position %d, new position %d\n",this->getIdRobotA(),newPosition);
             this->idRobotA=newPosition;
             return true;
         }else{
@@ -340,84 +334,7 @@ bool Laby::deplaceRobotA(int algo)
 bool Laby::deplaceRobotB(int algo)
 {
     // A COMPLETER AVEC AU MOINS UN ALGORITHME DE POURSUITE PROIE
-    int* dist = new int[4] {-1,-1,-1,-1};
-
-    int id_up = getUpID(this->getIdRobotB());
-    int id_down = getDownID(this->getIdRobotB());
-    int id_left = getLeftID(this->getIdRobotB());
-    int id_right = getRightID(this->getIdRobotB());
-    
-    if(id_up!=-1 && this->lit(id_up)!=1){
-        dist[0] = this->distMin(this->getIdRobotA(),id_up);
-    }
-
-    if(id_down!=-1 && this->lit(id_down)!=1){
-        dist[1] = this->distMin(this->getIdRobotA(),id_down);
-    }
-
-    if(id_left!=-1 && this->lit(id_left)!=1){
-        dist[2] = this->distMin(this->getIdRobotA(),id_left);
-    }
-
-    if(id_right!=-1 && this->lit(id_right)!=1){
-        dist[3] = this->distMin(this->getIdRobotA(),id_right);
-    }
-
-    int currentDist = this->distMin(this->getIdRobotA(),this->getIdRobotB());
-    int availableDistLength = 0;
-    for(int x=0;x<4;x++){
-        if(dist[x]==-1 || dist[x]<=currentDist){
-            dist[x]=-1;
-        }else{
-            availableDistLength+=1;
-        }
-    }
-
-    if(!availableDistLength){
-        delete[] dist;
-
-        return true;
-    }else{
-        int* availableDist = new int[availableDistLength];
-        
-        int availableDistIndex = 0;
-        for(int x=0;x<4;x++){
-            if(dist[x]!=-1){
-                switch (x)
-                {
-                case 0:
-                    availableDist[availableDistIndex]=id_up;
-                    break;
-                case 1:
-                    availableDist[availableDistIndex]=id_down;
-                    break;
-                case 2:
-                    availableDist[availableDistIndex]=id_left;
-                    break;
-                case 3:
-                    availableDist[availableDistIndex]=id_right;
-                    break;
-                }
-                availableDistIndex+=1;
-            }
-        }
-
-        srand(time(NULL));
-        int random = (int)(((double) rand())/RAND_MAX*(availableDistLength))+1;
-               
-        int newPosition = availableDist[random];
-
-        delete[] availableDist;
-        delete[] dist;
-
-        if(newPosition!=this->getIdRobotA()){
-            printf("Robot B - old position %d, new position %d\n",this->getIdRobotB(),newPosition);
-            this->idRobotB=newPosition;
-            return true;
-        }else{
-            return false;
-        }
-    }
+    return true;
 }
 
 ///============================================================================

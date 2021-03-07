@@ -32,6 +32,7 @@ class Carnet{
     };
 };
 
+
 int main(){
   Carnet c1 = Carnet();
   c1.ajoute(17.5);
