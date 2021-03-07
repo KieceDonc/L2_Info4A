@@ -1,145 +1,238 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <unistd.h>
 
-#define AFF_VIDE '-'    // Caractère représentant les cases vides pour l’affichage
-#define AFF_MUR  'X'    // Caractère représentant les murs pour l’affichage
-#define AFF_BORD ' '    // Caractère représentant les bords pour l’affichage
-#define PUSH_VALUE 2    // Valeur utiliser pour empiler un entier
-#define DEBUG 1         // utiliser pour le debug
+// Partie 3 du projet : poursuite de robots
 
-int NB_COLONNES = 10; // Longueur de la grille(nombre de colonnes)
-int NB_LIGNES = 10;   // Largeur de la grille(nombre de lignes)
-char* Grille = NULL;
-int robotAPosition = -1;
-int robotBPosition = -1;
+#include <iostream>
+#include <algorithm>
+#include <vector>
+#include "Labyrinthe.h"
 
-/*
-  retourne l'identifiant d'une case avec la ligne et colonne donnée en paramètre 
-  * {int} ligne représente la ligne souhaiter
-  * {int} colonne représente la colonne souhaiter
-  * return {int}
-*/
-int getID(int ligne, int colonne)
-{ 
-  if(colonne>=NB_COLONNES || ligne >=NB_LIGNES)
-  {
-    printf("%s\n","Erreur, impossible d'avoir cette ID");
-    return -1;
-  } 
-  return NB_COLONNES*ligne+colonne;
+using namespace std;
+
+// Attend que duree (en secondes) se soit écoulée depuis le dernier appel.
+void synchro(double duree)
+{
+    static clock_t jalon = clock();
+    jalon = jalon + (clock_t)(duree * CLOCKS_PER_SEC);;
+    while(clock()<jalon);
 }
 
-/*
-  retourne la première coordonnée (ligne) d'une case dont on donne l'identifiant
-  * {int} id 
-*/
-int getLigne(int id)
+///============================================================================
+/// Vous devez compléter l'implémentation de cette classe qui hérite de
+/// La classe Labyrinthe. Toutes les méthodes publiques de Labyrinthe sont
+/// disponibles. Vous pouvez ajouter des attributs et des méthodes.
+///============================================================================
+
+class Laby : public Labyrinthe
 {
-  return (int)(id/NB_COLONNES);
+private:
+    // Positions des robots
+    int idRobotA;
+    int idRobotB;
+
+    // ------- Ajoutez ici des attributs supplémentaires si applicable --------
+
+    // ------------------------------------------------------------------------
+public:
+    // Produit un labyrinthe avec une densité de cases blanches égale à density.
+    // Les positions initiale des deux robots sont situées dans les coins supérieur gauche
+    // et inférieur droit. Les codes des robots ne sont pas placés dans le grilles, dont
+    // toutes les cases vides sont initialisées à 0.
+    Laby(int nLignes, int nColonnes, double density);
+
+    // Construit un labyrinthe d'après un descripteur.
+    Laby(char* descr);
+
+    int getIdRobotA() {return idRobotA;}
+    int getIdRobotB() {return idRobotB;}    
+    void setIdRobotA(int id) {idRobotA = id;}
+    void setIdRobotB(int id) {idRobotB = id;}
+
+    // Produit un identifiant aléatoire de case vide (PAS un mur)/
+    int caseRandom();
+
+    int getUpID(int id);
+    int getDownID(int id);
+    int getLeftID(int id);
+    int getRightID(int id);
+
+    // Réalise un mouvemement du robot prédateur. La grille ne doit contenir que des cases 
+    // vides et des murs.
+    // L'attribut idRobotA est modifié. La grille n'est pas modifiée.
+    // Retourne false si les robots sont en contact (dans ce cas A n'est pas déplacé),
+    // et true si les robots n'étaient pas en contact avant le déplacement de A.
+    // Au moins un algorithme de déplacement doit être implémenté. Les algorithmes
+    // implémentés doivent être numéroté à partir de 1. Par exemple, si deux algorithmes sont
+    // implémentés, ils sont numérotés 1 et 2. Le paramètre algo désigne l'algorithme à
+    // utiliser. Si un seul algorithme est utilisé, sa valuer doit être 1.
+    bool deplaceRobotA(int algo);
+    
+    // Réalise un mouvemement du robot proie. Mêmes convension que deplaceRobotB.
+    bool deplaceRobotB(int algo);
+
+    // Place les robots (identifiés par les valeurs 2 et 3) dans la grille. Efface l'écran.
+    // Affiche la grille. Enlève les robots de lagrille (pour ne pas perturber distMin).
+    void visualisation();
+
+    // Lance une poursuite dans le labyrinthe courant. Si silent == true, aucun affichage n'est
+    // réalisé, sinon il y a affichage de chaque étape.
+    // Une étape = un mouvement de chaque robot. Si le nombre d'étape atteint timeout, la
+    // valeur timeout+1 est retournée, sinon le nombre d'étape avant contact des robots est 
+    // retourné. Si random == true, les position initiales des robots sont aléatoires, sinon ce 
+    // sont les coins supérieur gauche et inféieur droit.
+    // Les paramètres algoA et algoB indiquent le algorithmes utilisé pour les robots.
+    int course(int timeout, bool silent, bool random, int algoA, int algoB);
+
+    // Réalise nCourses courses et retourne la médiane des valeurs retournées par les
+    // appels à la méthode courses. Le apramètres algoA et algoB donnent les algorithmes
+    // à utiliser pour les robots A et B.
+    int evalue(int nCourses, int timeOut, int algoA, int algoB);
+};
+
+// Constructeur fourni par O. Bailleux. Peut être complété si nécessaire.
+Laby::Laby(int nLignes, int nColonnes, double density) : Labyrinthe(nLignes, nColonnes)
+{
+    setAff(" XAB.");
+    idRobotA = getID(0,0);
+    idRobotB = getID(getNbLignes()-1, getNbColonnes()-1);
+    genLaby((int)(density * getNbColonnes() * getNbLignes()));
+    // Ajouter les initialisations supplémentaire nécessaires, si applicable
 }
 
-
-/*
-  retourne la deuxième coordonnée (colonne) d'une case dont on donne l'identifiant
-  * {int} id
-  * return {int} 
-*/
-int getCol(int id)
+// Constructeur fourni gracieusement par O. Bailleux. Peut être complété si nécessaire.
+Laby::Laby(char* descr) : Labyrinthe(descr)
 {
-  return id-getLigne(id)*NB_COLONNES;
+    setAff(" XAB.");
+    idRobotA = getID(0,0);
+    idRobotB = getID(getNbLignes()-1, getNbColonnes()-1);
+    // Ajouter les initialisations supplémentaire nécessaires, si applicable
 }
 
-/*
-  place la valeur dans la case de coordonnées données en paramètre
-  * {int} ligne
-  * {int} colonne
-  * {char} x
-*/
-void modifie(int ligne, int colonne, char x)
+// Méthode fournie par O. Bailleux
+void Laby::visualisation()
 {
-  int id = getID(ligne,colonne);
-  Grille[id]=x;
+    // Les robots sont placés dans la grille avant l'affichage
+    modifie(getIdRobotA(),2);
+    modifie(getIdRobotB(),3);
+
+    //system("clear");
+    affiche();
+
+    // Les robots sont retirés de la grille pour ne pas perturber la recherche de chemins
+    // optimaux par la méthode distMin.
+    modifie(getIdRobotA(),0);
+    modifie(getIdRobotB(),0);
 }
 
-/*
-  retourne la valeur dans la case de coordonnées données en paramètre
-  * {int} ligne
-  * {int} colonne
-  * return {int}
-*/
-char lit(int ligne, int colonne)
+// Méthode fournie par O. Bailleux
+int Laby::course(int timeout, bool silent, bool random, int algoA, int algoB)
 {
-  int id = getID(ligne,colonne);
-  return Grille[id];
-}
-
-/*
-  affiche le Grille
-*/
-void affiche()
-{
-  for(int x=0;x<NB_COLONNES+2;x++)
-  {
-    printf("%c ",AFF_BORD);
-  }
-  printf("\n");
-  for(int x=0;x<NB_LIGNES;x++)
-  {
-    printf("%c ",AFF_BORD);
-    for(int y=0;y<NB_COLONNES;y++)
-    {
-      int id = getID(x,y);
-      if(id==robotAPosition)
-      {
-        printf("A ");
-      }else if(id==robotBPosition)
-      {
-        printf("B ");
-      }else
-      {
-        printf("%c ",Grille[id]);
-      }
+    if(random)
+    {// Course avec positions initiales des robots aléatoire
+        idRobotB = caseRandom();
+        idRobotA = caseRandom();
     }
-    printf("%c\n",AFF_BORD);
-  }
-  for(int x=0;x<NB_COLONNES+2;x++)
-  {
-    printf("%c ",AFF_BORD);
-  }
-  printf("\n");
+    else
+    {// Course avec départ dans les coins opposés.
+        idRobotA = getID(0,0);
+        idRobotB = getID(getNbLignes()-1, getNbColonnes()-1);
+    }
+    
+    int nEtapes = 0;
+    bool contact = false;
+
+    // Arret quand les robots se touchent ou de nombre maxi d'étapes atteint
+    while(!contact && nEtapes<timeout)
+    {
+        // On déplace le robot A
+        contact = !deplaceRobotA(algoA);
+
+        // On déplace le robot B sauf s'il est en contact avec A
+        if (!contact) contact = !deplaceRobotB(algoB);
+
+        nEtapes++;
+        if(!silent) 
+        {// Délai et affichage seulement si on est pas en mode silencieux
+            synchro(0.1);
+            visualisation();
+        }
+    }
+
+    if(contact) return nEtapes;
+    else return timeout+1;
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------
-// Début de la partie 2
-//-------------------------------------------------------------------------------------------------------------------------------------------------------
-
-int getUpID(int id)
+// Méthode fournie par O. Bailleux
+int Laby::evalue(int nCourses, int timeout, int algoA, int algoB)
 {
-  if(id-NB_COLONNES>=0)
+    std::vector<int> tab;
+    //int* tab = new int[nCourses]; // Tableau des scores
+
+    for(int i=0; i<nCourses; i++)
+    {// On lance une course et récupère le score
+        cout << i << " / " << nCourses;
+        int score = course(timeout, true, true, algoA, algoB);
+        tab.push_back(score);
+        cout << " --> " << score << endl;
+    }
+
+    // Tri du tableau de score pour calcul de la médiane.
+    sort(tab.begin(), tab.end());
+    return tab[nCourses/2];
+}
+
+///============================================================================
+/// Méthodes à compléter. Vous pouvez ajouter les méthodes supplémentaires
+/// pour simplifier votre programme et le rendre plus lisible.
+///============================================================================
+
+int Laby::caseRandom()
+{
+    //  A COMPLETER
+    int shouldContinue = 1;
+    int tosrand = time(NULL);
+    int random = 0;
+    int maxRecursion = this->getNbColonnes()*this->getNbLignes()*10;
+    int recursion = 0;
+    do
+    {
+        recursion++;
+        tosrand+=1;
+        srand(tosrand);
+        random = ((double) rand())/RAND_MAX*(this->getNbColonnes()*this->getNbLignes()-1)+1;
+        if(this->lit(random)==0)
+        {
+            shouldContinue=0;
+        }
+    }while(shouldContinue && recursion<=maxRecursion);
+
+    return random;
+}
+
+int Laby::getUpID(int id)
+{
+  if(id-this->getNbColonnes()>=0)
   {
-    return id-NB_COLONNES;
+    return id-this->getNbColonnes();
   }else
   {
     return -1;
   }
 }
 
-int getDownID(int id)
+int Laby::getDownID(int id)
 {
-  if((id+NB_COLONNES)<=NB_COLONNES*NB_LIGNES-1)
+  if((id+this->getNbColonnes())<=this->getNbColonnes()*this->getNbLignes()-1)
   {
-    return id+NB_COLONNES;
+    return id+this->getNbColonnes();
   }else
   {
     return -1;
   }
 }
 
-int getLeftID(int id)
+int Laby::getLeftID(int id)
 {
-  if(getLigne(id-1)==getLigne(id))
+  if(this->getLigne(id-1)==this->getLigne(id))
   {
     return id-1;
   }else
@@ -148,9 +241,9 @@ int getLeftID(int id)
   }
 }
 
-int getRightID(int id)
+int Laby::getRightID(int id)
 {
-  if(getLigne(id+1)==getLigne(id))
+  if(this->getLigne(id+1)==this->getLigne(id))
   {
     return id+1;
   }else
@@ -159,385 +252,313 @@ int getRightID(int id)
   }
 }
 
-int* Pile=NULL;
-int Sommet = 0;
-
-/*
-  empile un entier à la case id
-  * {int} id 
-*/
-void push(int id)
+// Méthode à compléter
+bool Laby::deplaceRobotA(int algo)
 {
-  Pile[Sommet]=id;
-  Sommet+=1;
-}
+    // A COMPLETER AVEC AU MOINS UN ALGORITHME DE POURSUITE PREDATEUR
+    int* dist = new int[4] {-1,-1,-1,-1};
 
-int pop()
-{
-  Sommet-=1;
-  int value = Pile[Sommet];
-  return value;
-}
-
-void marque(int id)
-{
-  if(id>=0 && id<(NB_COLONNES*NB_LIGNES) && Grille[id]==AFF_VIDE)
-  {
-    push(id);
-    Grille[id]=PUSH_VALUE;
-  }
-}
-
-int connexe(){
-  int casesBlanchesNb = 0;
-  for(int id = 0;id<NB_COLONNES*NB_LIGNES;id++)
-  {
-    if(Grille[id]==AFF_VIDE)
-    {
-      casesBlanchesNb+=1;
-    }
-  } 
-  marque(0);
-  if(casesBlanchesNb == 0)
-  {
-    printf("%s\n","Erreur : aucune case blanche");
-    return 0;
-  }else
-  {
-    do
-    {
-      int id = pop();
-      int id_up = getUpID(id);
-      int id_down = getDownID(id);
-      int id_left = getLeftID(id);
-      int id_right = getRightID(id);
-      if(id_up!=-1)
-      {
-        marque(id_up);
-      }
-      if(id_down!=-1)
-      {
-        marque(id_down);
-      }
-      if(id_left!=-1)
-      {
-        marque(id_left);
-      }
-      if(id_right!=-1)
-      {
-        marque(id_right);
-      }
-    }while(Sommet>=0);
-    Sommet+=1;
-
-    int casesBlanchesMarquerNb = 0;
-    for (int x=0;x<NB_COLONNES*NB_LIGNES;x++)
-    {
-      if (Grille[x]==PUSH_VALUE)
-      {
-        casesBlanchesMarquerNb+=1;
-        Grille[x] = AFF_VIDE;
-      }
+    int id_up = getUpID(this->getIdRobotA());
+    int id_down = getDownID(this->getIdRobotA());
+    int id_left = getLeftID(this->getIdRobotA());
+    int id_right = getRightID(this->getIdRobotA());
+    
+    if(id_up!=-1 && this->lit(id_up)!=1){
+        dist[0] = this->distMin(id_up,this->getIdRobotB());
     }
 
-    for(int x=0;x<NB_COLONNES*NB_LIGNES;x++)
-    {
-      Pile[x]=0;
-    }
-    return casesBlanchesMarquerNb==casesBlanchesNb;
-  }
-}
-
-// --------------------------------------------------------------------
-
-/*
-  retourne une position aléatoire qui n'est pas une case blanche et qui contient au moins
-  une case au dessus / en dessous / à gauche / à droite pour la génération du labyrinthes
-  * {int} 
-*/
-int genGetRandomPosition(int* genRandomAlreadyConnexe)
-{
-  int shouldContinue = 1;
-  int tosrand = time(NULL);
-  int random = 0;
-  int maxRecursion = NB_COLONNES*NB_LIGNES*100;
-  int recursion = 0;
-  do
-  {
-    recursion++;
-    tosrand+=1;
-    srand(tosrand);
-    random = ((double) rand())/RAND_MAX*(NB_COLONNES*NB_LIGNES-2)+1;
-    if(Grille[random]==AFF_VIDE && random!=0 && genRandomAlreadyConnexe[random]==0)
-    {
-      shouldContinue=0;
-    }
-  }while(shouldContinue && recursion<=maxRecursion);
-
-  if(recursion>=maxRecursion)
-  {
-    if(DEBUG)
-    {
-      printf("%s\n","Erreur : limite de récursion pour la génération du labyrithne atteinte");
-    }
-    return -1;
-  }
-
-  return random;
-}
-
-void gen_lab(int k){
-  if(k<(NB_COLONNES+NB_LIGNES-1))
-  {
-    printf("%s\n","Erreur : pas assez de cases blanches pour générer un labyrinthe intéressant");
-  }else
-  {
-    for(int x=0;x<NB_LIGNES;x++)
-    {
-      for(int y=0;y<NB_COLONNES;y++)
-      {
-        int squareID = getID(x,y);
-        Grille[squareID]=AFF_VIDE;
-      } 
+    if(id_down!=-1 && this->lit(id_down)!=1){
+        dist[1] = this->distMin(id_down,this->getIdRobotB());
     }
 
-    int* genRandomAlreadyConnexe = new int[NB_COLONNES*NB_LIGNES]; // retiens les nombres aléatoires non connexe 
-    int wallToBuildRemaining = (NB_COLONNES*NB_LIGNES)-k;
-    int canContinue = 1;
-    do
-    {
-      int randomPositionID = genGetRandomPosition(genRandomAlreadyConnexe);
-      canContinue = randomPositionID!=-1;
-      if(canContinue)
-      {
-        Grille[randomPositionID]=AFF_MUR;
-        int connexeResult = connexe();
-        if(connexeResult)
-        {
-          wallToBuildRemaining--;
-          for(int x=0;x<NB_LIGNES;x++)
-          {
-            for(int y=0;y<NB_COLONNES;y++)
-            {
-              genRandomAlreadyConnexe[getID(x,y)]=0;
-            }
-          }
-        }else
-        {
-          Grille[randomPositionID]=AFF_VIDE;
-          genRandomAlreadyConnexe[randomPositionID]=1;
+    if(id_left!=-1 && this->lit(id_left)!=1){
+        dist[2] = this->distMin(id_left,this->getIdRobotB());
+    }
+
+    if(id_right!=-1 && this->lit(id_right)!=1){
+        dist[3] = this->distMin(id_right,this->getIdRobotB());
+    }
+
+
+    int currentDist = this->distMin(this->getIdRobotA(),this->getIdRobotB());
+    int availableDistLength = 0;
+
+    for(int x=0;x<4;x++){
+        if(dist[x]==-1 || dist[x]>=currentDist){
+            dist[x]=-1;
+        }else{
+            availableDistLength+=1;
         }
-      }
-    }while(wallToBuildRemaining>0 && canContinue);
-    delete [] genRandomAlreadyConnexe;
-  }
-}
-
-// https://stackoverflow.com/questions/8440816/warning-implicit-declaration-of-function
-static void distMarque(int id,int value,int* distPile);
-static void distMarqueVoisins(int id,int value,int* distPile);
-
-/*
-  Marque la distance de la case id par rapport à la première case passé en paramètre de distMarque
-  et demande à marquer les cases voisines de id (crée un appel récursif qui va marquer toutes les 
-  cases de la grille)
-*/
-void distMarque(int id,int value,int* distPile){
-  int disPileValue = distPile[id];
-  if(disPileValue==0){
-    distPile[id]=value;
-    distMarqueVoisins(id,value,distPile);
-  }else if(value<disPileValue){
-    distPile[id]=value;
-    distMarqueVoisins(id,value,distPile);
-  }
-}
-
-/*
-  Vérifie si les cases voisines peuvent marquer la distance de la case id par rapport à la première 
-  case passé en paramètre de distMarque, si oui les marques
-*/
-void distMarqueVoisins(int id,int value,int* distPile){
-  int id_up = getUpID(id);
-  int id_down = getDownID(id);
-  int id_left = getLeftID(id);
-  int id_right = getRightID(id);
-  if(id_up!=-1 && Grille[id_up]!=AFF_MUR){
-    distMarque(id_up,value+1,distPile);
-  }
-  if(id_down!=-1 && Grille[id_down]!=AFF_MUR){
-    distMarque(id_down,value+1,distPile);
-  }
-  if(id_left!=-1 && Grille[id_left]!=AFF_MUR){
-    distMarque(id_left,value+1,distPile);
-  }
-  if(id_right!=-1 && Grille[id_right]!=AFF_MUR){
-    distMarque(id_right,value+1,distPile);   
-  }
-}
-
-int distMin(int id_current, int id_dest){
-  int* distPile = new int[NB_COLONNES*NB_LIGNES];
-  for(int x=0;x<NB_COLONNES*NB_LIGNES;x++){
-    // please see https://stackoverflow.com/a/3280458/12577512
-    distPile[x]=0;
-  }
-  distMarque(id_current,1,distPile);
-  int minValue = distPile[id_dest];
-  delete[] distPile;
-  return minValue;
-}
-
-// l'idée est de calculer la plus grande distance au prochain "tour" entre le robot A et le robot B pour avoir le meilleur mouvement
-int bestMoveRobotAStrat1(){
-  int* dist = new int[4];
-
-  int id_up = getUpID(robotAPosition);
-  int id_down = getDownID(robotAPosition);
-  int id_left = getLeftID(robotAPosition);
-  int id_right = getRightID(robotAPosition);
-  
-  if(id_up!=-1 && Grille[id_up]!=AFF_MUR){
-    dist[0] = distMin(id_up,robotBPosition);
-  }
-  if(id_down!=-1 && Grille[id_down]!=AFF_MUR){
-    dist[1] = distMin(id_down,robotBPosition);
-  }
-  if(id_left!=-1 && Grille[id_left]!=AFF_MUR){
-    dist[2] = distMin(id_left,robotBPosition);
-  }
-  if(id_right!=-1 && Grille[id_right]!=AFF_MUR){
-    dist[3] = distMin(id_right,robotBPosition);
-  }
-
-  int bestDistIndex = 4;
-  int bestDist = distMin(robotAPosition,robotBPosition);
-  for(int x=0;x<4;x++){
-    if(dist[x]>bestDist){
-      bestDistIndex = x;
-      bestDist = dist[x];
     }
-  }
 
-  delete [] dist;
-  
-  switch(bestDistIndex){
-    case 0 :{
-      return id_up;
-    };
-    case 1:{
-      return id_down;
-    };
-    case 2:{
-      return id_left;
+    printf("Robot A - %dup %ddown %dleft %dright %dcurrent\n",dist[0],dist[1],dist[2],dist[3],currentDist);
+
+    if(!availableDistLength){
+        delete[] dist;
+        return true;
+    }else{
+        int* availableDist = new int[availableDistLength];
+        int availableDistIndex = 0;
+        for(int x=0;x<4;x++){
+            if(dist[x]!=-1){
+                switch (x)
+                {
+                case 0:
+                    availableDist[availableDistIndex]=id_up;
+                    break;
+                case 1:
+                    availableDist[availableDistIndex]=id_down;
+                    break;
+                case 2:
+                    availableDist[availableDistIndex]=id_left;
+                    break;
+                case 3:
+                    availableDist[availableDistIndex]=id_right;
+                    break;
+                }
+                availableDistIndex+=1;
+            }
+        }
+
+        srand(time(NULL));
+        int random = (int)(((double) rand())/RAND_MAX*(availableDistLength))+1;
+        
+        int newPosition = availableDist[random];
+        
+        delete[] availableDist;
+        delete[] dist;
+        if(newPosition!=this->getIdRobotB()){
+            printf("Robot A - old position %d, new position %d\n",this->getIdRobotA(),newPosition);
+            this->idRobotA=newPosition;
+            return true;
+        }else{
+            return false;
+        }
     }
-    case 3:{
-      return id_right;
-    }
-    default:{
-      return robotAPosition;
-    }
-  }
-  
 }
 
-// l'idée est de calculer la plus petite distance au prochain "tour" entre le robot A et le robot B pour avoir le meilleur mouvement
-int bestMoveRobotBStrat1(){
-  int* dist = new int[4];
-
-  for(int x=0;x<4;x++){
-    dist[x]=NB_COLONNES*NB_LIGNES+50;
-  }
-
-  int id_up = getUpID(robotBPosition);
-  int id_down = getDownID(robotBPosition);
-  int id_left = getLeftID(robotBPosition);
-  int id_right = getRightID(robotBPosition);
-  
-  if(id_up!=-1 && Grille[id_up]!=AFF_MUR){
-    dist[0] = distMin(id_up,robotAPosition);
-  }
-
-  if(id_down!=-1 && Grille[id_down]!=AFF_MUR){
-    dist[1] = distMin(id_down,robotAPosition);
-  }
-
-  if(id_left!=-1 && Grille[id_left]!=AFF_MUR){
-    dist[2] = distMin(id_left,robotAPosition);
-  }
-
-  if(id_right!=-1 && Grille[id_right]!=AFF_MUR){
-    dist[3] = distMin(id_right,robotAPosition);
-  }
-
-  int bestDistIndex = 4;
-  int bestDist = distMin(robotBPosition,robotAPosition);
-  for(int x=0;x<4;x++){
-    printf("%d %d\n",x,bestDist);
-    if(dist[x]<bestDist){
-      bestDistIndex = x;
-      bestDist = dist[x];
-    }
-  }
-
-  delete [] dist;
-  
-  switch(bestDistIndex){
-    case 0 :{
-      return id_up;
-    };
-    case 1:{
-      return id_down;
-    };
-    case 2:{
-      return id_left;
-    }
-    case 3:{
-      return id_right;
-    }
-    default:{
-      return robotBPosition;
-    }
-  }
-}
-
-int bestMoveRobotAStrat2(){
-  return 0;
-}
-
-int bestMoveRobotBStrat2(){
-  return 0;
-}
-
-void simulationRobot(){
-  int cmptSimulation = 0;
-  robotAPosition=0;
-  robotBPosition=NB_COLONNES*NB_LIGNES-1;
-  affiche();
-
-  do{
-    sleep(1);
-    cmptSimulation+=1;
-    robotAPosition = bestMoveRobotAStrat1();
-    robotBPosition = bestMoveRobotBStrat1();
-    affiche();
-  }while(robotAPosition!=robotBPosition && cmptSimulation<=NB_COLONNES*NB_LIGNES*100);
-
-  if(robotAPosition == robotBPosition){
-    printf("Le robot B a réussi à atteindre le robot A\n");
-  }else{
-    printf("Le robot B n'a pas réussi à atteindre le robot A\n");
-  }
-}
-
-int main()
+bool Laby::deplaceRobotB(int algo)
 {
-  Grille = new char[NB_COLONNES*NB_LIGNES];
-  Pile = new int[NB_COLONNES*NB_LIGNES]; 
-  gen_lab(30*2);
-  affiche();
-  simulationRobot();
-  delete [] Grille;
-  delete [] Pile;
-  return 0;
+    // A COMPLETER AVEC AU MOINS UN ALGORITHME DE POURSUITE PROIE
+    int* dist = new int[4] {-1,-1,-1,-1};
+
+    int id_up = getUpID(this->getIdRobotB());
+    int id_down = getDownID(this->getIdRobotB());
+    int id_left = getLeftID(this->getIdRobotB());
+    int id_right = getRightID(this->getIdRobotB());
+    
+    if(id_up!=-1 && this->lit(id_up)!=1){
+        dist[0] = this->distMin(this->getIdRobotA(),id_up);
+    }
+
+    if(id_down!=-1 && this->lit(id_down)!=1){
+        dist[1] = this->distMin(this->getIdRobotA(),id_down);
+    }
+
+    if(id_left!=-1 && this->lit(id_left)!=1){
+        dist[2] = this->distMin(this->getIdRobotA(),id_left);
+    }
+
+    if(id_right!=-1 && this->lit(id_right)!=1){
+        dist[3] = this->distMin(this->getIdRobotA(),id_right);
+    }
+
+    int currentDist = this->distMin(this->getIdRobotA(),this->getIdRobotB());
+    int availableDistLength = 0;
+    for(int x=0;x<4;x++){
+        if(dist[x]==-1 || dist[x]<=currentDist){
+            dist[x]=-1;
+        }else{
+            availableDistLength+=1;
+        }
+    }
+
+    if(!availableDistLength){
+        delete[] dist;
+
+        return true;
+    }else{
+        int* availableDist = new int[availableDistLength];
+        
+        int availableDistIndex = 0;
+        for(int x=0;x<4;x++){
+            if(dist[x]!=-1){
+                switch (x)
+                {
+                case 0:
+                    availableDist[availableDistIndex]=id_up;
+                    break;
+                case 1:
+                    availableDist[availableDistIndex]=id_down;
+                    break;
+                case 2:
+                    availableDist[availableDistIndex]=id_left;
+                    break;
+                case 3:
+                    availableDist[availableDistIndex]=id_right;
+                    break;
+                }
+                availableDistIndex+=1;
+            }
+        }
+
+        srand(time(NULL));
+        int random = (int)(((double) rand())/RAND_MAX*(availableDistLength))+1;
+               
+        int newPosition = availableDist[random];
+
+        delete[] availableDist;
+        delete[] dist;
+
+        if(newPosition!=this->getIdRobotA()){
+            printf("Robot B - old position %d, new position %d\n",this->getIdRobotB(),newPosition);
+            this->idRobotB=newPosition;
+            return true;
+        }else{
+            return false;
+        }
+    }
+}
+
+///============================================================================
+/// Quelques descripteurs qui seront utilisés pour évaluer les algos de poursuite
+///============================================================================
+
+// Gille de 20 lignes et 30 colonnes densité de cases vides 0.8
+char descripteur1[] = 
+{ 20, 30,
+0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 
+0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 
+0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 
+0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 
+0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 
+0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 
+0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 
+0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 
+1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 
+1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 
+1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 
+};
+
+// Gille de 20 lignes et 30 colonnes sans murs
+char descripteur2[] = 
+{ 20, 30,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+};
+
+// Gille de 20 lignes et 30 colonnes densité de cases vides 0.9
+char descripteur3[] = 
+{ 20, 30,
+0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 
+0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 
+0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 
+1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 
+1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 
+0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+};
+
+// Gille de 20 lignes et 30 colonnes densité de cases vides 0.7
+char descripteur4[] =
+{ 20, 30,
+0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 
+0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 
+0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 
+0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 
+0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 
+1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 
+1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 
+1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 
+1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 
+1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 
+1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 
+0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 
+0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 
+0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 
+0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 
+0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 
+1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 
+0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 
+};
+
+///============================================================================
+/// Exemple d'utilisation.
+///============================================================================
+
+void testPoursuite()
+{
+    int dureeMax = 300;
+    Laby laby(30, 60, 0.9);
+
+    int duree = laby.course(dureeMax, false, false, 1, 1);
+
+    if(duree > dureeMax)
+    {
+        cout << "Echec apres " << dureeMax << " etapes" << endl;
+    }
+    else
+    {
+        cout << "Succes apres " << duree << " etapes" << endl;
+    }
+}
+
+void testEval()
+{
+    Laby laby(descripteur2);
+
+    int score = laby.evalue(100, 100, 1, 2);
+ 
+    cout << "Mediane : " << score << endl;
+}
+
+int main(int argc, const char * argv[])
+{
+    srand((unsigned)time(NULL));
+    testPoursuite();
+    //testEval();
+
+    return 0;
 }
