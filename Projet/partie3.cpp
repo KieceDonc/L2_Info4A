@@ -30,7 +30,7 @@ private:
     int idRobotB;
 
     // ------- Ajoutez ici des attributs supplémentaires si applicable --------
-
+    int savesrand;
     // ------------------------------------------------------------------------
 public:
     // Produit un labyrinthe avec une densité de cases blanches égale à density.
@@ -114,7 +114,7 @@ void Laby::visualisation()
     modifie(getIdRobotA(),2);
     modifie(getIdRobotB(),3);
 
-    //system("clear");
+    system("clear");
     affiche();
 
     // Les robots sont retirés de la grille pour ne pas perturber la recherche de chemins
@@ -189,15 +189,19 @@ int Laby::caseRandom()
 {
     //  A COMPLETER
     int shouldContinue = 1;
-    int tosrand = time(NULL);
+    if(this->savesrand!=0){
+        this->savesrand+=13;    
+    }else{  
+        this->savesrand = time(NULL);
+    }
     int random = 0;
     int maxRecursion = this->getNbColonnes()*this->getNbLignes()*10;
     int recursion = 0;
     do
     {
         recursion++;
-        tosrand+=1;
-        srand(tosrand);
+        this->savesrand+=1;
+        srand(this->savesrand);
         random = ((double) rand())/RAND_MAX*(this->getNbColonnes()*this->getNbLignes()-1)+1;
         if(this->lit(random)==0)
         {
@@ -334,7 +338,79 @@ bool Laby::deplaceRobotA(int algo)
 bool Laby::deplaceRobotB(int algo)
 {
     // A COMPLETER AVEC AU MOINS UN ALGORITHME DE POURSUITE PROIE
-    return true;
+    int* dist = new int[4] {-1,-1,-1,-1};
+
+    int id_up = this->getUpID(this->getIdRobotB());
+    int id_down = this->getDownID(this->getIdRobotB());
+    int id_left = this->getLeftID(this->getIdRobotB());
+    int id_right = this->getRightID(this->getIdRobotB());
+
+    if(id_up!=-1 && this->lit(id_up)==0){
+        dist[0] = this->distMin(id_up,this->getIdRobotA());
+    }
+
+    if(id_down!=-1 && this->lit(id_down)==0){
+        dist[1] = this->distMin(id_down,this->getIdRobotA());
+    }
+
+    if(id_left!=-1 && this->lit(id_left)==0){
+        dist[2] = this->distMin(id_left,this->getIdRobotA());
+    }
+    
+    if(id_right!=-1 && this->lit(id_right)==0){
+        dist[3] = this->distMin(id_right,this->getIdRobotA());
+    }
+
+    int availableDistLength = 0;
+    int currentDist = this->distMin(this->getIdRobotA(),this->getIdRobotB());
+    for(int x=0;x<4;x++){
+        if(dist[x]!=-1 && dist[x]>currentDist){
+            availableDistLength+=1;
+        }else{
+            dist[x]=-1;
+        }
+    }
+
+    if(availableDistLength==0){
+        delete[] dist;
+        return true;
+    }else{ 
+        int* availableDist = new int[availableDistLength];
+        int availableDistIndex = 0;
+
+        if(dist[0]!=-1){
+            availableDist[availableDistIndex]=id_up;
+            availableDistIndex+=1;
+        }
+
+        if(dist[1]!=-1){
+            availableDist[availableDistIndex]=id_down;
+            availableDistIndex+=1;
+        }
+
+        if(dist[2]!=-1){
+            availableDist[availableDistIndex]=id_left;
+            availableDistIndex+=1;
+        }
+
+        if(dist[3]!=-1){
+            availableDist[availableDistIndex]=id_right;
+            availableDistIndex+=1;
+        }
+
+        int random = ((double) rand())/RAND_MAX*(availableDistLength)-1;
+        int newPosition = availableDist[random];
+
+        delete[] dist;
+        delete[] availableDist;
+
+        if(newPosition!=this->getIdRobotA()){
+            this->idRobotB=newPosition;
+            return true;
+        }else{
+            return false;
+        }
+    }
 }
 
 ///============================================================================
@@ -450,7 +526,7 @@ void testPoursuite()
     int dureeMax = 300;
     Laby laby(30, 60, 0.9);
 
-    int duree = laby.course(dureeMax, false, false, 1, 1);
+    int duree = laby.course(dureeMax, false, true, 1, 1);
 
     if(duree > dureeMax)
     {
@@ -474,8 +550,7 @@ void testEval()
 int main(int argc, const char * argv[])
 {
     srand((unsigned)time(NULL));
-    testPoursuite();
-    //testEval();
-
+    //testPoursuite();
+    testEval();
     return 0;
 }
