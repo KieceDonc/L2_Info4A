@@ -202,7 +202,7 @@ int Laby::caseRandom()
         recursion++;
         this->savesrand+=1;
         srand(this->savesrand);
-        random = ((double) rand())/RAND_MAX*(this->getNbColonnes()*this->getNbLignes()-1)+1;
+        random = ((double) rand())/RAND_MAX*(this->getNbColonnes()*this->getNbLignes()-1);
         if(this->lit(random)==0)
         {
             shouldContinue=0;
@@ -320,7 +320,7 @@ bool Laby::deplaceRobotA(int algo)
             availableDistIndex+=1;
         }
 
-        int random = ((double) rand())/RAND_MAX*(availableDistLength)-1;
+        int random = ((double) rand())/RAND_MAX*(availableDistLength);
         int newPosition = availableDist[random];
 
         delete[] dist;
@@ -338,77 +338,128 @@ bool Laby::deplaceRobotA(int algo)
 bool Laby::deplaceRobotB(int algo)
 {
     // A COMPLETER AVEC AU MOINS UN ALGORITHME DE POURSUITE PROIE
-    int* dist = new int[4] {-1,-1,-1,-1};
-
     int id_up = this->getUpID(this->getIdRobotB());
     int id_down = this->getDownID(this->getIdRobotB());
     int id_left = this->getLeftID(this->getIdRobotB());
     int id_right = this->getRightID(this->getIdRobotB());
 
-    if(id_up!=-1 && this->lit(id_up)==0){
-        dist[0] = this->distMin(id_up,this->getIdRobotA());
-    }
-
-    if(id_down!=-1 && this->lit(id_down)==0){
-        dist[1] = this->distMin(id_down,this->getIdRobotA());
-    }
-
-    if(id_left!=-1 && this->lit(id_left)==0){
-        dist[2] = this->distMin(id_left,this->getIdRobotA());
-    }
-    
-    if(id_right!=-1 && this->lit(id_right)==0){
-        dist[3] = this->distMin(id_right,this->getIdRobotA());
-    }
-
-    int availableDistLength = 0;
-    int currentDist = this->distMin(this->getIdRobotA(),this->getIdRobotB());
-    for(int x=0;x<4;x++){
-        if(dist[x]!=-1 && dist[x]>currentDist){
-            availableDistLength+=1;
-        }else{
-            dist[x]=-1;
+    if(algo==1){
+        bool done = false;
+        int recursion = 0;
+        int maxRecursion = 25;
+        int nextID = -1;
+        do{
+            srand(time(NULL)+recursion);
+            int random = ((double) rand()/RAND_MAX)*4;
+            recursion+=1;
+            switch(random){
+                case 0:
+                    if(id_up!=-1 && this->lit(id_up)==0){
+                        done = true;
+                        nextID = id_up;
+                    }
+                    break;
+                case 1:
+                    if(id_down!=-1 && this->lit(id_down)==0){
+                        done = true;
+                        nextID = id_down;
+                    }
+                    break;
+                case 2:
+                    if(id_left!=-1 && this->lit(id_left)==0){
+                        done = true;
+                        nextID = id_left;
+                    }
+                    break;
+                case 3:
+                    if(id_right!=-1 && this->lit(id_right)==0){
+                        done = true;
+                        nextID = id_right;
+                    }
+                    break;
+            }
+            if(done){
+                done = this->idRobotA!=nextID;
+                if(!done){
+                    return false;
+                }
+            }
+        }while(done && recursion<maxRecursion);
+        
+        if(nextID!=-1){
+            this->idRobotB=nextID;
         }
-    }
 
-    if(availableDistLength==0){
-        delete[] dist;
         return true;
-    }else{ 
-        int* availableDist = new int[availableDistLength];
-        int availableDistIndex = 0;
 
-        if(dist[0]!=-1){
-            availableDist[availableDistIndex]=id_up;
-            availableDistIndex+=1;
+    }else{
+        int* dist = new int[4] {-1,-1,-1,-1};
+
+        if(id_up!=-1 && this->lit(id_up)==0){
+            dist[0] = this->distMin(id_up,this->getIdRobotA());
         }
 
-        if(dist[1]!=-1){
-            availableDist[availableDistIndex]=id_down;
-            availableDistIndex+=1;
+        if(id_down!=-1 && this->lit(id_down)==0){
+            dist[1] = this->distMin(id_down,this->getIdRobotA());
         }
 
-        if(dist[2]!=-1){
-            availableDist[availableDistIndex]=id_left;
-            availableDistIndex+=1;
+        if(id_left!=-1 && this->lit(id_left)==0){
+            dist[2] = this->distMin(id_left,this->getIdRobotA());
+        }
+        
+        if(id_right!=-1 && this->lit(id_right)==0){
+            dist[3] = this->distMin(id_right,this->getIdRobotA());
         }
 
-        if(dist[3]!=-1){
-            availableDist[availableDistIndex]=id_right;
-            availableDistIndex+=1;
+        int availableDistLength = 0;
+        int currentDist = this->distMin(this->getIdRobotA(),this->getIdRobotB());
+        for(int x=0;x<4;x++){
+            if(dist[x]!=-1 && dist[x]>currentDist){
+                availableDistLength+=1;
+            }else{
+                dist[x]=-1;
+            }
         }
 
-        int random = ((double) rand())/RAND_MAX*(availableDistLength)-1;
-        int newPosition = availableDist[random];
-
-        delete[] dist;
-        delete[] availableDist;
-
-        if(newPosition!=this->getIdRobotA()){
-            this->idRobotB=newPosition;
+        if(availableDistLength==0){
+            delete[] dist;
             return true;
-        }else{
-            return false;
+        }else{ 
+            int* availableDist = new int[availableDistLength];
+            int availableDistIndex = 0;
+
+            if(dist[0]!=-1){
+                availableDist[availableDistIndex]=id_up;
+                availableDistIndex+=1;
+            }
+
+            if(dist[1]!=-1){
+                availableDist[availableDistIndex]=id_down;
+                availableDistIndex+=1;
+            }
+
+            if(dist[2]!=-1){
+                availableDist[availableDistIndex]=id_left;
+                availableDistIndex+=1;
+            }
+
+            if(dist[3]!=-1){
+                availableDist[availableDistIndex]=id_right;
+                availableDistIndex+=1;
+            }
+
+            int random = ((double) rand())/RAND_MAX*(availableDistLength)-1;
+            int newPosition = availableDist[random];
+
+            delete[] dist;
+            delete[] availableDist;
+
+            if(newPosition!=this->getIdRobotA()){
+                this->idRobotB=newPosition;
+                return true;
+            }else{
+                return false;
+            }
         }
     }
 }
@@ -542,6 +593,15 @@ void testEval()
 {
     Laby laby(descripteur2);
 
+    int score = laby.evalue(50, 100, 1, 1);
+ 
+    cout << "Mediane : " << score << endl;
+}
+
+void testEvalAlgo2()
+{
+    Laby laby(descripteur2);
+
     int score = laby.evalue(100, 100, 1, 2);
  
     cout << "Mediane : " << score << endl;
@@ -552,5 +612,6 @@ int main(int argc, const char * argv[])
     srand((unsigned)time(NULL));
     //testPoursuite();
     testEval();
+    testEvalAlgo2();
     return 0;
 }
