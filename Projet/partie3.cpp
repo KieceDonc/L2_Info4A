@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <vector>
 #include "Labyrinthe.h"
-
+#include "time.h"
 using namespace std;
 
 // Attend que duree (en secondes) se soit écoulée depuis le dernier appel.
@@ -610,7 +610,7 @@ void testEvalAlgo2()
 int main(int argc, const char * argv[])
 {
     srand((unsigned)time(NULL));
-    //testPoursuite();
+    testPoursuite();
     testEval();
     testEvalAlgo2();
     return 0;
