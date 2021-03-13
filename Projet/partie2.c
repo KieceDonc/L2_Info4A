@@ -8,8 +8,8 @@
 #define PUSH_VALUE 2    // Valeur utiliser pour empiler un entier
 #define DEBUG 1         // utiliser pour le debug
 
-int NB_COLONNES = 10; // Longueur de la grille(nombre de colonnes)
-int NB_LIGNES = 10;   // Largeur de la grille(nombre de lignes)
+int NB_COLONNES = 200; // Longueur de la grille(nombre de colonnes)
+int NB_LIGNES = 200;   // Largeur de la grille(nombre de lignes)
 char* Grille = NULL;
 int robotAPosition = -1;
 int robotBPosition = -1;
@@ -179,7 +179,7 @@ int pop()
 }
 
 void marque(int id)
-{#include <unistd.h>
+{
   if(id>=0 && id<(NB_COLONNES*NB_LIGNES) && Grille[id]==AFF_VIDE)
   {
     push(id);
@@ -254,37 +254,44 @@ int connexe(){
   une case au dessus / en dessous / à gauche / à droite pour la génération du labyrinthes
   * {int} 
 */
-int genGetRandomPosition(int* genRandomAlreadyConnexe)
+int getIntelligentRandomID(int* noConnexe,int recursion)
 {
-  int shouldContinue = 1;
-  int tosrand = time(NULL);
-  int random = 0;
-  int maxRecursion = NB_COLONNES*NB_LIGNES*100;
-  int recursion = 0;
-  do
-  {
-    recursion++;
-    tosrand+=1;
-    srand(tosrand);
-    random = ((double) rand())/RAND_MAX*(NB_COLONNES*NB_LIGNES-2)+1;
-    if(Grille[random]==AFF_VIDE && random!=0 && genRandomAlreadyConnexe[random]==0)
-    {
-      shouldContinue=0;
+  int avaibleIDLength = 0;
+  
+  for(int x=0;x<NB_COLONNES*NB_LIGNES;x++){
+    if(Grille[x]==AFF_VIDE && noConnexe[x]==0){
+      avaibleIDLength+=1;
     }
-  }while(shouldContinue && recursion<=maxRecursion);
+  }
 
-  if(recursion>=maxRecursion)
-  {
-    if(DEBUG)
-    {
-      printf("%s\n","Erreur : limite de récursion pour la génération du labyrithne atteinte");
+  int avaibleID[avaibleIDLength];
+  int avaibleIDIndex = 0;
+  for(int x=0;x<NB_COLONNES*NB_LIGNES;x++){
+    if(Grille[x]==AFF_VIDE && noConnexe[x]==0){
+      avaibleID[avaibleIDIndex] = x;
+      avaibleIDIndex+=1;
     }
+  }
+
+  if(avaibleIDLength==0){
     return -1;
   }
 
-  return random;
+  srand((unsigned)time(NULL)+recursion);
+  int random = ((double) rand())/RAND_MAX*(avaibleIDLength-1)+1;
+
+  int id = avaibleID[random];
+  if(id>=0&&id<=NB_COLONNES*NB_LIGNES){
+    return id;
+  }else{
+    return -1;
+  }
 }
 
+
+/*
+  Crée un labyrinthe intéressant de k case. k étant l'entier transmit en paramètre
+*/
 void gen_lab(int k){
   if(k<(NB_COLONNES+NB_LIGNES-1))
   {
@@ -300,12 +307,15 @@ void gen_lab(int k){
       } 
     }
 
-    int* genRandomAlreadyConnexe = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int)); // retiens les nombres aléatoires non connexe 
+    int noConnexe[NB_LIGNES*NB_COLONNES]; // retiens les nombres aléatoires non connexe 
     int wallToBuildRemaining = (NB_COLONNES*NB_LIGNES)-k;
     int canContinue = 1;
+    int recursion = 0;
+    int maxRecursion = NB_COLONNES*NB_LIGNES*4;
     do
     {
-      int randomPositionID = genGetRandomPosition(genRandomAlreadyConnexe);
+      recursion+=1;
+      int randomPositionID = getIntelligentRandomID(noConnexe,recursion);
       canContinue = randomPositionID!=-1;
       if(canContinue)
       {
@@ -314,21 +324,18 @@ void gen_lab(int k){
         if(connexeResult)
         {
           wallToBuildRemaining--;
-          for(int x=0;x<NB_LIGNES;x++)
-          {
-            for(int y=0;y<NB_COLONNES;y++)
-            {
-              genRandomAlreadyConnexe[getID(x,y)]=0;
-            }
-          }
         }else
         {
           Grille[randomPositionID]=AFF_VIDE;
-          genRandomAlreadyConnexe[randomPositionID]=1;
+          noConnexe[randomPositionID]=1;
+        }
+      }else{
+        // certaines cases considérées comme non connexe peuvent être par la suite considérées comme connexe
+        for(int x=0;x<NB_COLONNES*NB_LIGNES-1;x++){
+          noConnexe[x]=0;
         }
       }
-    }while(wallToBuildRemaining>0 && canContinue);
-    free(genRandomAlreadyConnexe);
+    }while(wallToBuildRemaining>0 && recursion<maxRecursion);
   }
 }
 
@@ -336,9 +343,8 @@ int main()
 {
   Grille = (char*)calloc((NB_LIGNES*NB_COLONNES),sizeof(char));
   Pile = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int)); 
-  gen_lab(30*2);
+  gen_lab(NB_COLONNES*NB_LIGNES*0.55);
   affiche();
-  simulationRobot();
   free(Grille);
   free(Pile);
   return 0;

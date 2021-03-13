@@ -90,11 +90,10 @@ void Segment::print(){
   this->b.print();
 };
 
-class PilePoints{
-  public:
-    Point data[TPILE];
-    int top;
-};
+typedef struct{
+  Point data[TPILE];
+  int top;
+}PilePoints;
 
 PilePoints* creePilePoints(){
   PilePoints* pilePoints = new PilePoints();
@@ -102,10 +101,31 @@ PilePoints* creePilePoints(){
   return pilePoints;
 }
 
-void empile(){
-  
+void empile(PilePoints* p, Point* w){
+  p->data[p->top]=*w;
+  p->top+=1;
+}
+
+Point depile(PilePoints* p){
+  Point pt = p->data[p->top];
+  p->top-=1;
+  return pt;
 }
 
 int main(){
+  PilePoints* p1 = creePilePoints();
+  Point* pt1 = new Point(0,0);
+  Point* pt2 = new Point(2,2);
+  empile(p1,pt1);
+  empile(p1,pt2);
+  PilePoints* p2 = p1;
+  Point pt3 = depile(p2);
+  pt3.print();
+  PilePoints* p3 = p2;
+  Point pt4 = depile(p3);
+  pt4.print();
+  delete p1;
+  delete pt1;
+  delete pt2;
   return 0;
 }
