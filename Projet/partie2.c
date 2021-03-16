@@ -1,18 +1,25 @@
+/*
+  gcc Valentin_VERSTRACTE_partie2.cpp -g -Wall -o Valentin_VERSTRACTE_partie2
+  commande pour compiler
+  
+  ./Valentin_VERSTRACTE_partie2
+  commande pour exécuter
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
-#define AFF_VIDE '-'    // Caractère représentant les cases vides pour l’affichage
-#define AFF_MUR  'X'    // Caractère représentant les murs pour l’affichage
-#define AFF_BORD ' '    // Caractère représentant les bords pour l’affichage
 #define PUSH_VALUE 2    // Valeur utiliser pour empiler un entier
 #define DEBUG 1         // utiliser pour le debug
 
-int NB_COLONNES = 200; // Longueur de la grille(nombre de colonnes)
-int NB_LIGNES = 200;   // Largeur de la grille(nombre de lignes)
+int NB_COLONNES = 30; // Longueur de la grille(nombre de colonnes)
+int NB_LIGNES = 15;   // Largeur de la grille(nombre de lignes)
+
 char* Grille = NULL;
-int robotAPosition = -1;
-int robotBPosition = -1;
+char AFF_VIDE = '-';  // Caractère représentant les cases vides pour l’affichage
+char AFF_MUR  = 'X';  // Caractère représentant les murs pour l’affichage
+char AFF_BORD = 'M';  // Caractère représentant les bords pour l’affichage
+
 
 /*
   retourne l'identifiant d'une case avec la ligne et colonne donnée en paramètre 
@@ -90,16 +97,7 @@ void affiche()
     for(int y=0;y<NB_COLONNES;y++)
     {
       int id = getID(x,y);
-      if(id==robotAPosition)
-      {
-        printf("A ");
-      }else if(id==robotBPosition)
-      {
-        printf("B ");
-      }else
-      {
-        printf("%c ",Grille[id]);
-      }
+      printf("%c ",Grille[id]);
     }
     printf("%c\n",AFF_BORD);
   }
@@ -248,32 +246,39 @@ int connexe(){
 }
 
 // --------------------------------------------------------------------
+//                              PARTIE 2
+// --------------------------------------------------------------------
 
 /*
   retourne une position aléatoire qui n'est pas une case blanche et qui contient au moins
   une case au dessus / en dessous / à gauche / à droite pour la génération du labyrinthes
   * {int} 
 */
-int getIntelligentRandomID(int* noConnexe,int recursion)
+int getIntelligentRandomID(int* noConnexe, int recursion)
 {
   int avaibleIDLength = 0;
   
-  for(int x=0;x<NB_COLONNES*NB_LIGNES;x++){
-    if(Grille[x]==AFF_VIDE && noConnexe[x]==0){
+  for(int x=0;x<NB_COLONNES*NB_LIGNES;x++)
+  {
+    if(Grille[x]==AFF_VIDE && noConnexe[x]==0)
+    {
       avaibleIDLength+=1;
     }
   }
 
   int avaibleID[avaibleIDLength];
   int avaibleIDIndex = 0;
-  for(int x=0;x<NB_COLONNES*NB_LIGNES;x++){
-    if(Grille[x]==AFF_VIDE && noConnexe[x]==0){
+  for(int x=0;x<NB_COLONNES*NB_LIGNES;x++)
+  {
+    if(Grille[x]==AFF_VIDE && noConnexe[x]==0)
+    {
       avaibleID[avaibleIDIndex] = x;
       avaibleIDIndex+=1;
     }
   }
 
-  if(avaibleIDLength==0){
+  if(avaibleIDLength==0)
+  {
     return -1;
   }
 
@@ -281,9 +286,11 @@ int getIntelligentRandomID(int* noConnexe,int recursion)
   int random = ((double) rand())/RAND_MAX*(avaibleIDLength-1)+1;
 
   int id = avaibleID[random];
-  if(id>=0&&id<=NB_COLONNES*NB_LIGNES){
+  if(id>=0&&id<=NB_COLONNES*NB_LIGNES)
+  {
     return id;
-  }else{
+  }else
+  {
     return -1;
   }
 }
@@ -292,7 +299,8 @@ int getIntelligentRandomID(int* noConnexe,int recursion)
 /*
   Crée un labyrinthe intéressant de k case. k étant l'entier transmit en paramètre
 */
-void gen_lab(int k){
+void gen_lab(int k)
+{
   if(k<(NB_COLONNES+NB_LIGNES-1))
   {
     printf("%s\n","Erreur : pas assez de cases blanches pour générer un labyrinthe intéressant");
@@ -307,7 +315,7 @@ void gen_lab(int k){
       } 
     }
 
-    int noConnexe[NB_LIGNES*NB_COLONNES]; // retiens les nombres aléatoires non connexe 
+    int noConnexe[NB_LIGNES*NB_COLONNES]; 
     int wallToBuildRemaining = (NB_COLONNES*NB_LIGNES)-k;
     int canContinue = 1;
     int recursion = 0;
@@ -329,9 +337,11 @@ void gen_lab(int k){
           Grille[randomPositionID]=AFF_VIDE;
           noConnexe[randomPositionID]=1;
         }
-      }else{
+      }else
+      {
         // certaines cases considérées comme non connexe peuvent être par la suite considérées comme connexe
-        for(int x=0;x<NB_COLONNES*NB_LIGNES-1;x++){
+        for(int x=0;x<NB_COLONNES*NB_LIGNES-1;x++)
+        {
           noConnexe[x]=0;
         }
       }
@@ -343,7 +353,7 @@ int main()
 {
   Grille = (char*)calloc((NB_LIGNES*NB_COLONNES),sizeof(char));
   Pile = (int*)calloc((NB_LIGNES*NB_COLONNES),sizeof(int)); 
-  gen_lab(NB_COLONNES*NB_LIGNES*0.55);
+  gen_lab(NB_COLONNES*NB_LIGNES*0.5);
   affiche();
   free(Grille);
   free(Pile);

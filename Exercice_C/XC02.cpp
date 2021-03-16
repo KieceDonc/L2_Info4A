@@ -3,6 +3,6 @@
 int main(){
   int z = 7;
   int* q = &z;
-  int* p = &z;
+  int** p = &q;
   return 0;
 }
