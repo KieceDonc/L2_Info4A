@@ -1,3 +1,11 @@
+/*
+  g++ Labyrinthe.o Valentin_VERSTRACTE_partie3.cpp -g -Wall -o Valentin_VERSTRACTE_partie3
+  commande pour compiler
+  
+  ./Valentin_VERSTRACTE_partie3
+  commande pour exécuter
+*/
+
 
 // Partie 3 du projet : poursuite de robots
 
@@ -189,9 +197,11 @@ int Laby::caseRandom()
 {
     //  A COMPLETER
     int shouldContinue = 1;
-    if(this->savesrand!=0){
+    if(this->savesrand!=0)
+    {
         this->savesrand+=13;    
-    }else{  
+    }else
+    {  
         this->savesrand = time(NULL);
     }
     int random = 0;
