@@ -222,6 +222,11 @@ int Laby::caseRandom()
     return random;
 }
 
+/*
+  retourne l'id de la case en haut de celle donné en paramètre, si l'id en haut n'existe pas retourne -1
+  * {int} id de la case que l'on souhaite
+  * return {int} id de la case en haut (-1 si impossible)  
+*/
 int Laby::getUpID(int id)
 {
   if(id-this->getNbColonnes()>=0)
@@ -233,6 +238,11 @@ int Laby::getUpID(int id)
   }
 }
 
+/*
+  retourne l'id de la case en bas de celle donné en paramètre, si l'id en bas n'existe pas retourne -1
+  * {int} id de la case que l'on souhaite
+  * return {int} id de la case sur en bas (-1 si impossible)  
+*/
 int Laby::getDownID(int id)
 {
   if((id+this->getNbColonnes())<=this->getNbColonnes()*this->getNbLignes()-1)
@@ -244,6 +254,11 @@ int Laby::getDownID(int id)
   }
 }
 
+/*
+  retourne l'id de la case à gauche de celle donné en paramètre, si l'id à gauche n'existe pas retourne -1
+  * {int} id de la case que l'on souhaite
+  * return {int} id de la case à gauche (-1 si impossible)  
+*/
 int Laby::getLeftID(int id)
 {
   if(this->getLigne(id-1)==this->getLigne(id))
@@ -255,6 +270,11 @@ int Laby::getLeftID(int id)
   }
 }
 
+/*
+  retourne l'id de la case à droite de celle donné en paramètre, si l'id à droite n'existe pas retourne -1
+  * {int} id de la case que l'on souhaite
+  * return {int} id de la case à droite (-1 si impossible)  
+*/
 int Laby::getRightID(int id)
 {
   if(this->getLigne(id+1)==this->getLigne(id))

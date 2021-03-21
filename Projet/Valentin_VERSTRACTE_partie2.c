@@ -12,6 +12,10 @@
 #define PUSH_VALUE 2    // Valeur utiliser pour empiler un entier
 #define DEBUG 1         // utiliser pour le debug
 
+
+
+int* Pile=NULL;
+int Sommet = 0;       
 int NB_COLONNES = 30; // Longueur de la grille(nombre de colonnes)
 int NB_LIGNES = 15;   // Largeur de la grille(nombre de lignes)
 
@@ -112,6 +116,11 @@ void affiche()
 // Début de la partie 2
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 
+/*
+  retourne l'id de la case en haut de celle donné en paramètre, si l'id en haut n'existe pas retourne -1
+  * {int} id de la case que l'on souhaite
+  * return {int} id de la case en haut (-1 si impossible)  
+*/
 int getUpID(int id)
 {
   if(id-NB_COLONNES>=0)
@@ -123,6 +132,11 @@ int getUpID(int id)
   }
 }
 
+/*
+  retourne l'id de la case en bas de celle donné en paramètre, si l'id en bas n'existe pas retourne -1
+  * {int} id de la case que l'on souhaite
+  * return {int} id de la case sur en bas (-1 si impossible)  
+*/
 int getDownID(int id)
 {
   if((id+NB_COLONNES)<=NB_COLONNES*NB_LIGNES-1)
@@ -134,6 +148,11 @@ int getDownID(int id)
   }
 }
 
+/*
+  retourne l'id de la case à gauche de celle donné en paramètre, si l'id à gauche n'existe pas retourne -1
+  * {int} id de la case que l'on souhaite
+  * return {int} id de la case à gauche (-1 si impossible)  
+*/
 int getLeftID(int id)
 {
   if(getLigne(id-1)==getLigne(id))
@@ -145,6 +164,11 @@ int getLeftID(int id)
   }
 }
 
+/*
+  retourne l'id de la case à droite de celle donné en paramètre, si l'id à droite n'existe pas retourne -1
+  * {int} id de la case que l'on souhaite
+  * return {int} id de la case à droite (-1 si impossible)  
+*/
 int getRightID(int id)
 {
   if(getLigne(id+1)==getLigne(id))
@@ -156,9 +180,6 @@ int getRightID(int id)
   }
 }
 
-int* Pile=NULL;
-int Sommet = 0;
-
 /*
   empile un entier à la case id
   * {int} id 
@@ -169,6 +190,10 @@ void push(int id)
   Sommet+=1;
 }
 
+/*
+  dépile un entier et le retourne
+  * return {int}
+*/
 int pop()
 {
   Sommet-=1;
@@ -176,6 +201,10 @@ int pop()
   return value;
 }
 
+/*
+  Gère si une case doit être marqué
+  * {int} id
+*/
 void marque(int id)
 {
   if(id>=0 && id<(NB_COLONNES*NB_LIGNES) && Grille[id]==AFF_VIDE)
@@ -185,6 +214,9 @@ void marque(int id)
   }
 }
 
+/*
+  détermine si toutes les cases blanches sont connectées.
+*/
 int connexe()
 {
   int casesBlanchesNb = 0;
@@ -248,8 +280,10 @@ int connexe()
 
 /*
   retourne une position aléatoire qui n'est pas une case blanche et qui contient au moins
-  une case au dessus / en dessous / à gauche / à droite pour la génération du labyrinthes
-  * {int} 
+  une case au dessus / en dessous / à gauche / à droite pour la génération du labyrinthe
+  * int* noConnexe tableau qui représente la grille et qui retient les cases non connexe
+  * int recursion nombre de récursion de la boucle dans gen_lab
+  * return {int} 
 */
 int getIntelligentRandomID(int* noConnexe, int recursion)
 {
@@ -295,7 +329,8 @@ int getIntelligentRandomID(int* noConnexe, int recursion)
 
 /*
   Crée un labyrinthe intéressant de k case. k étant l'entier transmit en paramètre
-*/
+  {int k} k le nombre de cases blanches voulu
+  */
 void gen_lab(int k)
 {
   if(k<(NB_COLONNES+NB_LIGNES-1))
