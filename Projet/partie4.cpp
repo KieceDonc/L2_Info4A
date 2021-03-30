@@ -619,6 +619,9 @@ int Labyrinthe::course(int timeout, bool silent, bool random, int algoA, int alg
     idRobotA = getID(0,0);
     idRobotB = getID(getNbLignes()-1, getNbColonnes()-1);
   }
+  if(!silent){
+    this->visualisation();
+  }
   
   int nEtapes = 0;
   bool contact = false;
@@ -808,22 +811,22 @@ bool Labyrinthe::deplaceRobotA(int algo)
       if(correctInput){
         switch(input){
           case 'z':{
-            correctInput = this->lit(id_up)==0;
+            correctInput = id_up!=-1 && this->lit(id_up)==0;
             newPosition = id_up;
             break;
           }
           case 'q':{
-            correctInput = this->lit(id_left)==0;
+            correctInput = id_left !=-1 && this->lit(id_left)==0;
             newPosition = id_left;
             break;
           }
           case 's':{
-            correctInput = this->lit(id_down)==0;
+            correctInput = id_down !=-1 && this->lit(id_down)==0;
             newPosition = id_down;
             break;
           }
           case 'd':{
-            correctInput = this->lit(id_right)==0;
+            correctInput = id_right !=-1 && this->lit(id_right)==0;
             newPosition = id_right;
             break;
           }
@@ -858,7 +861,58 @@ bool Labyrinthe::deplaceRobotB(int algo)
   int id_left = this->getLeftID(this->getIdRobotB());
   int id_right = this->getRightID(this->getIdRobotB());
 
-  if(algo==1)
+  if(algo==0)
+  {
+    bool correctInput = false;
+    char input;
+    do{
+      printf("Veuillez choisir une direction ( z au dessus, q à gauche, s en dessous, d à gauche )\n");
+      cin >> input;
+      correctInput = input=='z' || input=='q' || input=='s' || input=='d';
+      int newPosition = 0;
+      if(correctInput){
+        switch(input){
+          case 'z':{
+            correctInput = id_up!=-1 && this->lit(id_up)==0;
+            newPosition = id_up;
+            break;
+          }
+          case 'q':{
+            correctInput = id_left !=-1 && this->lit(id_left)==0;
+            newPosition = id_left;
+            break;
+          }
+          case 's':{
+            correctInput = id_down !=-1 && this->lit(id_down)==0;
+            newPosition = id_down;
+            break;
+          }
+          case 'd':{
+            correctInput = id_right !=-1 && this->lit(id_right)==0;
+            newPosition = id_right;
+            break;
+          }
+        }
+
+        if(!correctInput){
+          printf("Il y a un mur, veuillez choisir une case valide\n");
+        }else{
+          if(newPosition!=this->getIdRobotA())
+          {
+            this->idRobotB=newPosition;
+            return true;
+          }else
+          {
+            return false;
+          }
+        }
+      }else{
+        printf("%c n'est pas une touche valide\n",input);
+      }
+    }while(!correctInput);
+    return false;
+  }
+  else if(algo==1)
   {
     bool done = false;
     int recursion = 0;
@@ -912,7 +966,7 @@ bool Labyrinthe::deplaceRobotB(int algo)
     
     if(nextID!=-1)
     {
-        this->idRobotB=nextID;
+      this->idRobotB=nextID;
     }
 
     return true;
@@ -1149,8 +1203,9 @@ void testEvalAlgo2()
 }
 
 void testPoursuiteManualPredator(){
-  int dureeMax = 999999999;
+  int dureeMax = 3000000;
   Labyrinthe labyrinthe(30, 60, 0.9);
+  
   int duree = labyrinthe.course(dureeMax, false, true, 1, 2);
 
   if(duree > dureeMax)
@@ -1163,12 +1218,29 @@ void testPoursuiteManualPredator(){
   }  
 }
 
+void testPoursuiteManuelFugitive(){
+  int dureeMax = 3000000;
+  Labyrinthe labyrinthe(30, 60, 0.9);
+  
+  int duree = labyrinthe.course(dureeMax, false, true, 0, 0);
+
+  if(duree > dureeMax)
+  {
+    cout << "Echec apres " << dureeMax << " etapes" << endl;
+  }
+  else
+  {
+    cout << "Succes apres " << duree << " etapes" << endl;
+  }
+}
+
 int main(int argc, const char * argv[])
 {
   srand((unsigned)time(NULL));
-  /*testPoursuite();
-  testEval();
-  testEvalAlgo2();*/
+  testPoursuite();
+  testPoursuiteManuelFugitive();
   testPoursuiteManualPredator();
+  testEval();
+  testEvalAlgo2();
   return 0;
 }
