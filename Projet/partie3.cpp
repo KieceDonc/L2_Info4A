@@ -114,7 +114,7 @@ void Laby::visualisation()
     modifie(getIdRobotA(),2);
     modifie(getIdRobotB(),3);
 
-    system("clear");
+    //system("clear");
     affiche();
 
     // Les robots sont retirés de la grille pour ne pas perturber la recherche de chemins
@@ -357,6 +357,9 @@ bool Laby::deplaceRobotB(int algo)
     int id_down = this->getDownID(this->getIdRobotB());
     int id_left = this->getLeftID(this->getIdRobotB());
     int id_right = this->getRightID(this->getIdRobotB());
+    for(int x=0;x<50;x++){
+        printf("%d\n",distMin(x,x+1));
+    }
 
     if(algo==1)
     {

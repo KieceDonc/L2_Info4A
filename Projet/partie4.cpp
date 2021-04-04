@@ -581,7 +581,7 @@ int Labyrinthe::distMin(int id1, int id2)
   distMarque(id1,1,distPile);
   int minValue = distPile[id2];
   delete distPile;
-  return minValue;
+  return minValue-1;
 }
 
 ///============================================================================
