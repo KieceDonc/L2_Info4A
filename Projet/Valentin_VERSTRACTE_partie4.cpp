@@ -1,3 +1,11 @@
+/*
+  g++ Valentin_VERSTRACTE_partie4.cpp -g -Wall -o Valentin_VERSTRACTE_partie4
+  commande pour compiler
+  
+  ./Valentin_VERSTRACTE_partie4
+  commande pour exécuter
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -131,7 +139,9 @@ public:
 // Retourne le caractère à afficher pour la valeur val.
 char Labyrinthe::getAff(char val)
 {
-  if(val<0 || val>aff.length())
+  int antiWarningA = val;
+  int antiWarningB = aff.length();
+  if(val<0 || antiWarningA>antiWarningB)
   {
     return aff[aff.length()-1];
   }
@@ -149,7 +159,7 @@ Labyrinthe::Labyrinthe(int nLignes, int nColonnes)
   this->nb_colonnes = nColonnes;
   this->idRobotA = getID(0,0);
   this->idRobotB = getID(getNbLignes()-1, getNbColonnes()-1);
-  this->grille = (char*)calloc(this->getNbLignes()*this->getNbColonnes(),sizeof(char));
+  this->grille = new char[this->getNbLignes()*this->getNbColonnes()];
   for(int x=0;x<this->getNbLignes();x++)
   {
     for(int y=0;y<this->getNbColonnes();y++)
@@ -169,7 +179,7 @@ Labyrinthe::Labyrinthe(int nLignes, int nColonnes, double density)
   this->nb_colonnes = nColonnes;
   this->idRobotA = getID(0,0);
   this->idRobotB = getID(getNbLignes()-1, getNbColonnes()-1);
-  this->grille = (char*)calloc(this->getNbLignes()*this->getNbColonnes(),sizeof(char));
+  this->grille = new char[this->getNbLignes()*this->getNbColonnes()];
   for(int x=0;x<this->getNbLignes();x++)
   {
     for(int y=0;y<this->getNbColonnes();y++)
@@ -193,7 +203,7 @@ Labyrinthe::Labyrinthe(char data[])
   this->nb_colonnes = data[1];
   this->idRobotA = getID(0,0);
   this->idRobotB = getID(getNbLignes()-1, getNbColonnes()-1);
-  this->grille = (char*)calloc(this->getNbLignes()*this->getNbColonnes(),sizeof(char));
+  this->grille = new char[this->getNbLignes()*this->getNbColonnes()];
   for(int x=0;x<this->getNbLignes();x++)
   {
     for(int y=0;y<this->getNbColonnes();y++)
@@ -350,7 +360,6 @@ void Labyrinthe::affiche()
 
     for(int y=0;y<this->getNbColonnes();y++)
     {
-      int id = getID(x,y);
       printf("%c ",this->getAff(this->lit(this->getID(x,y))));
     }
 
@@ -555,12 +564,7 @@ void Labyrinthe::genLaby(int nb)
 void Labyrinthe::distMarque(int id,int value,int* distPile)
 {
   int disPileValue = distPile[id];
-  if(disPileValue==0)
-  {
-    distPile[id]=value;
-    this->distMarqueVoisins(id,value,distPile);
-  }
-  else if(value<disPileValue)
+  if(disPileValue==0 || value<disPileValue)
   {
     distPile[id]=value;
     this->distMarqueVoisins(id,value,distPile);
@@ -597,10 +601,13 @@ void Labyrinthe::distMarqueVoisins(int id,int value,int* distPile)
 // Retourne la distance minimum entre les cases id1 et id2.
 int Labyrinthe::distMin(int id1, int id2)
 {
-  int* distPile = (int*)calloc((this->getNbLignes()*this->getNbColonnes()),sizeof(int));
+  int* distPile = new int[this->getNbLignes()*this->getNbColonnes()];
+  for(int x=0;x<this->getNbLignes()*this->getNbColonnes();x++){
+    distPile[x]=0;
+  }
   distMarque(id1,1,distPile);
   int minValue = distPile[id2];
-  delete distPile;
+  delete[] distPile;
   return minValue-1;
 }
 
