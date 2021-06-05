@@ -1,35 +1,38 @@
+> DestinÃ© Ã  but pÃ©dagogique j'ai rÃ©alisÃ© ces programmes Ã  mes dÃ©buts en informatique Ã  l'universitÃ©. Il est donc loin de respecter toutes les rÃ¨gles de l'art en dÃ©veloppement et en programmation. N'hÃ©sitez pas Ã  corriger, complÃ©ter, modifier, ou d'ajouter vos remarques et bonnes pratiques soit par l'intermÃ©diaire de Pull requests ou d'issues, c'est aussi pour Ã§a que je le partage avec la communautÃ© Github ðŸ’ª ðŸ˜€>
 
+# â€¢ PrÃ©sentation
 
-    Destiné à but pédagogique j'ai réalisé ces programmes à mes débuts en informatique à l'université. Il est donc loin de respecter toutes les règles de l'art en développement et en programmation. N'hésitez pas à corriger, compléter, modifier, ou d'ajouter vos remarques et bonnes pratiques soit par l'intermédiaire de Pull requests ou d'issues, c'est aussi pour ça que je le partage avec la communauté Github ?? ??.
+## Intro
 
-? Présentation
-Intro
+Ce rÃ©pertoire contient tout les programmes en lien avec le module d'info4A ( Licence 2 ) dont voici la description :
 
-Ce répertoire contient tout les programmes en lien avec le module d'info4A ( Licence 2 ) dont voici la description :
-
-    L’objectif est d’acquérir de solides bases de programmation en C et C++. Sont couverts les types scalaires, les opérations bit à bit et leurs applications, les pointeurs, tableaux et structures, les classes, la gestion dynamique de la mémoire (cycle de vie et représentations des données dans la pile et dans le tas, bonnes pratiques de programmation pour éviter les fuites mémoires, structures chaînées).
+* Lâ€™objectif est dâ€™acquÃ©rir de solides bases de programmation en C et C++. Sont couverts les types scalaires, les opÃ©rations bit Ã  bit et leurs applications, les pointeurs, tableaux et structures, les classes, la gestion dynamique de la mÃ©moire (cycle de vie et reprÃ©sentations des donnÃ©es dans la pile et dans le tas, bonnes pratiques de programmation pour Ã©viter les fuites mÃ©moires, structures chaÃ®nÃ©es).
 
 Responsable du module : Olivier Bailleux
-Les différents chapitres
 
-    Partie A : les bases du langage C
-    Partie B : Bitwises et représentations binaires
-    Partie C : Pointeurs et tableaux
-    Partie D : chaînes en langage C
-    Partie E : tableaux dynamiques en C et C++
-    Partie F : structures et classes monolithiques
-    Partie G : classe string du C++
-    Partie H : composition monolithique de structures et classes
-    Partie I : Classes ramifiées en C++
+# â€¢ Les diffÃ©rents chapitres
 
-? Compiler et exécuté
+* [Partie A](/Partie_A) : les bases du langage C
+* [Partie B](/Partie_B) : Bitwises et reprÃ©sentations binaires
+* [Partie C](/Partie_C) : Pointeurs et tableaux
+* [Partie D](/Partie_D) : chaÃ®nes en langage C
+* [Partie E](/Partie_E) : tableaux dynamiques en C et C++
+* [Partie F](/Partie_F) : structures et classes monolithiques
+* [Partie G](/Partie_G): classe string du C++
+* [Partie H](/Partie_H) : composition monolithique de structures et classes
+* [Partie I](/Partie_I) : Classes ramifiÃ©es en C++
 
-Pour compiler avec g++ ( fonctionne également avec gcc )
+# â€¢ Compiler et exÃ©cutÃ©
 
+Pour compiler avec g++ ( fonctionne Ã©galement avec gcc )
+```
 g++ fichier.cpp -o fichier
+```
 
-Exécuté
-
+ExÃ©cutÃ©
+```
 .\fichier
+```
+# â€¢ DÃ©monstration du projet
 
-? Démonstration du projet
+## [VidÃ©o](https://youtu.be/piFTLMaVbAw)
